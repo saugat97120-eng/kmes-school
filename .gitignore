@@ -1,0 +1,95 @@
+# ============================================================
+# KMES School Website — Root .gitignore (monorepo: frontend + backend)
+# ============================================================
+
+# -------------------------------
+# Dependencies
+# -------------------------------
+node_modules/
+node_modules/*
+**/node_modules/
+
+# -------------------------------
+# Environment / secrets
+#   Real .env files are IGNORED. Templates (.env.example) are TRACKED.
+# -------------------------------
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# -------------------------------
+# Build outputs & coverage
+# -------------------------------
+dist/
+build/
+coverage/
+*.tsbuildinfo
+.eslintcache
+
+# -------------------------------
+# Logs
+# -------------------------------
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# -------------------------------
+# Temp / OS / editor files
+# -------------------------------
+tmp/
+temp/
+.tmp/
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+Desktop.ini
+*~
+*.swp
+*.swo
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# -------------------------------
+# Local credential / helper files
+# -------------------------------
+.vercel
+.netlify
+.env.local
+.env.*.local
+npm-debug.log*
+
+# -------------------------------
+# Project-specific generated artifacts
+#   (test/media scratch files produced during development — do not commit)
+# -------------------------------
+frontend/lint_src.txt
+backend/tmp_test_img.jpg
+backend/tmp_test_pdf.pdf
+backend/tmp-upload-tests/
+**/tmp-upload-tests/
+
+# Root stray attachment-test / sample files (not part of source)
+/actual-image.png
+/invalid.exe
+/oversize.pdf
+/tmp-attachment-image.png
+/tmp-attachment-test.pdf
+/valid-attachment-docx.docx
+/valid-attachment-image.png
+
+# Backup / restore scratch output (kept outside the repo during DR drills)
+backup/
+kmes17-backup/
+*.dump
+*.bson

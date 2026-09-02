@@ -1,0 +1,109 @@
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import morgan from "morgan";
+import dotenv from "dotenv";
+import rateLimit from "express-rate-limit";
+
+import { connectDB } from "./config/database.js";
+import { env, isProduction, validateProductionConfiguration } from "./config/env.js";
+import { notFound, errorHandler } from "./middleware/errorHandler.js";
+import { sanitizeInput } from "./middleware/sanitizeInput.js";
+
+import healthRoutes from "./routes/health.routes.js";
+import authRoutes from "./routes/auth.routes.js";
+import noticeRoutes from "./routes/notices.routes.js";
+import eventRoutes from "./routes/events.routes.js";
+import galleryRoutes from "./routes/gallery.routes.js";
+import achievementRoutes from "./routes/achievements.routes.js";
+import facilityRoutes from "./routes/facilities.routes.js";
+import activityRoutes from "./routes/activities.routes.js";
+import contactRoutes from "./routes/contact.routes.js";
+import siteSettingsRoutes from "./routes/siteSettings.routes.js";
+import pageContentRoutes from "./routes/pageContent.routes.js";
+import uploadRoutes from "./routes/upload.routes.js";
+import attachmentsRoutes from "./routes/attachments.routes.js";
+import mediaRoutes from "./routes/media.routes.js";
+import usersRoutes from "./routes/users.routes.js";
+import activityLogsRoutes from "./routes/activityLogs.routes.js";
+import dashboardRoutes from "./routes/dashboard.routes.js";
+import inboxRoutes from "./routes/inbox.routes.js";
+import facebookRoutes from "./integrations/facebook/facebook.routes.js";
+import aiRoutes from "./integrations/ai/ai.routes.js";
+
+dotenv.config();
+
+const app = express();
+const PORT = env.port;
+
+await connectDB();
+
+// Clear startup warnings in production when critical config is missing. We do
+// NOT hard-crash: optional integrations stay disabled until configured, and an
+// attempt to use them returns the existing safe per-request config error.
+if (isProduction()) {
+  for (const problem of validateProductionConfiguration()) {
+    console.warn(`[config] ${problem}`);
+  }
+}
+
+app.use(helmet());
+app.use(
+  cors({
+    origin: env.clientOrigin,
+  })
+);
+app.use(express.json());
+app.use(sanitizeInput);
+app.use(morgan("dev"));
+
+// General API rate limit
+app.use(
+  "/api",
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 300,
+    standardHeaders: true,
+    legacyHeaders: false,
+  })
+);
+
+// Stricter limit on auth endpoints to slow down brute-force login attempts
+app.use(
+  "/api/auth",
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: "Too many attempts. Please try again later." },
+  })
+);
+
+app.use("/api/health", healthRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/notices", noticeRoutes);
+app.use("/api/events", eventRoutes);
+app.use("/api/gallery", galleryRoutes);
+app.use("/api/achievements", achievementRoutes);
+app.use("/api/facilities", facilityRoutes);
+app.use("/api/activities", activityRoutes);
+app.use("/api/contact", contactRoutes);
+app.use("/api/site-settings", siteSettingsRoutes);
+app.use("/api/page-content", pageContentRoutes);
+app.use("/api/upload", uploadRoutes);
+app.use("/api/attachments", attachmentsRoutes);
+app.use("/api/media", mediaRoutes);
+app.use("/api/users", usersRoutes);
+app.use("/api/activity-logs", activityLogsRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/inbox", inboxRoutes);
+app.use("/api/integrations/facebook", facebookRoutes);
+app.use("/api/ai", aiRoutes);
+
+app.use(notFound);
+app.use(errorHandler);
+
+app.listen(PORT, () => {
+  console.log(`KMES Backend running on http://localhost:${PORT}`);
+});
