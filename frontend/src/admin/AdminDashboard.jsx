@@ -144,7 +144,7 @@ function AdminDashboard() {
           <div className="mt-4 space-y-3">
             {!stats ? (
               <p className="text-sm text-gray-400">Loading...</p>
-            ) : stats.recentActivity.length === 0 ? (
+            ) : !stats.recentActivity?.length ? (
               <p className="text-sm text-gray-400">No activity recorded yet.</p>
             ) : (
               stats.recentActivity.map((log) => (
@@ -178,7 +178,7 @@ function AdminDashboard() {
             <div className="mt-3 space-y-3">
               {!stats ? (
                 <p className="text-sm text-gray-400">Loading...</p>
-              ) : stats.upcomingEvents.length === 0 ? (
+              ) : !stats.upcomingEvents?.length ? (
                 <p className="text-sm text-gray-400">No upcoming events.</p>
               ) : (
                 stats.upcomingEvents.map((ev) => (
@@ -198,7 +198,7 @@ function AdminDashboard() {
             <div className="mt-3 space-y-3">
               {!stats ? (
                 <p className="text-sm text-gray-400">Loading...</p>
-              ) : stats.recentMessages.length === 0 ? (
+              ) : !stats.recentMessages?.length ? (
                 <p className="text-sm text-gray-400">No messages yet.</p>
               ) : (
                 stats.recentMessages.map((m) => (
