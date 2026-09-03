@@ -5,6 +5,7 @@ import { body, validationResult } from "express-validator";
 import User from "../models/User.js";
 import { requireAuth } from "../middleware/auth.js";
 import { getPermissionsForRole } from "../permissions.js";
+import { env } from "../config/env.js";
 import {
   sendPasswordReset,
   getMockEmailAdapter,
@@ -83,11 +84,12 @@ const GENERIC_RESET_RESPONSE = {
   message: "If that email address is registered, a password reset has been initiated.",
 };
 
-// Build the reset link the end user clicks. Uses the frontend origin and a
-// future-proof path; the raw token is carried in the link for the provider to
+// Build the reset link the end user clicks. Uses the configured reset-link base
+// (RESET_LINK_BASE, falling back to FRONTEND_URL) so staging and production can
+// never cross-link; the raw token is carried in the link for the provider to
 // deliver, is never stored, and is never logged.
 function buildResetLink(resetToken) {
-  const base = process.env.FRONTEND_URL || "http://localhost:5173";
+  const base = env.resetLinkBase;
   return `${base}/reset-password?token=${encodeURIComponent(resetToken)}`;
 }
 

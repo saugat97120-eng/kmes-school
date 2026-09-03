@@ -48,11 +48,32 @@ if (isProduction()) {
 }
 
 app.use(helmet());
+// CORS: explicit allow-list of frontend origins (no wildcard). Each environment
+// (dev/staging/prod) supplies only the origins it is allowed to serve. When the
+// list has exactly one origin it is equivalent to the previous single-origin
+// configuration; credentials remain unchanged (safe with an explicit origin).
 app.use(
   cors({
-    origin: env.clientOrigin,
+    origin(origin, callback) {
+      const allowed = env.allowedOrigins;
+      // Allow non-browser / same-origin / curl requests (no Origin header) and
+      // any explicitly approved origin. For any other origin, deny by omitting
+      // the Access-Control-Allow-Origin header so the browser blocks the
+      // request (the request is NOT served with CORS headers).
+      if (!origin || allowed.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(null, false);
+    },
   })
 );
+// Trust proxy: when the app runs behind a trusted reverse proxy / PaaS edge on
+// production, express-trust-proxy lets rate limiting and secure/protocol see the
+// real client IP. Default is off (0) so development is unchanged; operators set
+// the correct count via TRUST_PROXY to match the deployed proxy topology.
+if (Number(env.trustProxy) > 0) {
+  app.set("trust proxy", Number(env.trustProxy));
+}
 app.use(express.json());
 app.use(sanitizeInput);
 app.use(morgan("dev"));

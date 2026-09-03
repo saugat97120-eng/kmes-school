@@ -4,6 +4,7 @@
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import { connectDB } from "./config/database.js";
+import { assertSeedAllowed } from "./config/seedGuard.js";
 
 import Notice from "./models/Notice.js";
 import Event from "./models/Event.js";
@@ -15,7 +16,14 @@ import SiteSettings from "./models/SiteSettings.js";
 
 dotenv.config();
 
+// Phase 18C-3 — Production seed protection. Blocks production and requires an
+// explicit --allow-destructive flag in other environments BEFORE connecting, so
+// a blocked run never touches the database.
 async function seed() {
+  const guard = assertSeedAllowed();
+  if (!guard.allowed) {
+    process.exit(1);
+  }
   await connectDB();
 
   await Promise.all([

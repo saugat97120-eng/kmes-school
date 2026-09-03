@@ -20,6 +20,15 @@ export function isDevelopment() {
   return process.env.NODE_ENV === "development";
 }
 
+// Parse a comma-separated allow-list of origins into a trimmed, de-duplicated,
+// non-empty array. Never returns a wildcard "*" and never returns undefined.
+// Used for CORS so development, staging, and production each permit only the
+// explicit frontend origins they are supposed to talk to.
+function parseOriginList(raw) {
+  if (!raw) return [];
+  return [...new Set(raw.split(",").map((s) => s.trim()).filter(Boolean))];
+}
+
 // Introduce a small namespace of well-known variables so callers never guess
 // at raw strings. Values are read lazily from process.env (single source of
 // truth remains the process environment, not a snapshot).
@@ -29,6 +38,25 @@ export const env = {
   mongoUri: process.env.MONGODB_URI || "",
   jwtSecret: process.env.JWT_SECRET || "",
   frontendUrl: process.env.FRONTEND_URL || "http://localhost:5173",
+
+  // Reset-link authority (Phase 18C-3): the single source used to build the
+  // password-reset URL. RESET_LINK_BASE is the approved live source so staging
+  // and production can never cross-link; when unset it falls back to the
+  // frontend origin for back-compatibility. Env-specific, never shared.
+  resetLinkBase: process.env.RESET_LINK_BASE || process.env.FRONTEND_URL || "http://localhost:5173",
+
+  // Trusted reverse-proxy hop count for Express `app.set("trust proxy", ...)`.
+  // Defaults to 0 (off) so development/most local setups behave exactly as
+  // before. Operators must set the correct count on the production PaaS which
+  // fronts Express with a trusted proxy, so rate limiting and client-IP
+  // detection (secure/protocol) use the real client IP rather than the proxy.
+  trustProxy: process.env.TRUST_PROXY || "0",
+
+  // Explicit CORS allow-list. Comma-separated origins (no wildcard allowed).
+  // Falls back to the single legacy client origin for back-compatibility.
+  allowedOrigins: parseOriginList(
+    process.env.ALLOWED_ORIGINS || process.env.CLIENT_URL || process.env.FRONTEND_URL || "http://localhost:5173"
+  ),
 
   cloudinaryName: process.env.CLOUDINARY_CLOUD_NAME || "",
   cloudinaryKey: process.env.CLOUDINARY_API_KEY || "",
@@ -49,8 +77,6 @@ export const env = {
   // Phase 18B: email delivery. mock = in-memory only (no real send); none/blank
   // keeps a safe no-op adapter. A future production value e.g. `smtp|resend`.
   emailProvider: process.env.EMAIL_PROVIDER || "mock",
-
-  clientOrigin: process.env.CLIENT_URL || process.env.FRONTEND_URL || "http://localhost:5173",
 };
 
 // Validate critical production configuration. Returns an array of generic
@@ -65,7 +91,25 @@ export function validateProductionConfiguration() {
   if (isProduction()) {
     if (!env.mongoUri) problems.push("MONGODB_URI is not set. Database routes will fail.");
     if (!env.jwtSecret) problems.push("JWT_SECRET is not set. Authentication/signing will fail.");
-    if (!env.clientOrigin) problems.push("Frontend client origin is not configured for CORS.");
+    if (env.allowedOrigins.length === 0) {
+      problems.push("No frontend origin is configured for CORS.");
+    } else if (env.allowedOrigins.includes("*")) {
+      problems.push("CORS allow-list must not contain a wildcard '*' origin.");
+    }
   }
   return problems;
+}
+
+// Exposed for focused configuration tests (Phase 18C-3). Never returns secret
+// values — only the resolved non-secret configuration the rest of the app uses.
+export function getPublicConfigSnapshot() {
+  return {
+    nodeEnv: env.nodeEnv,
+    port: env.port,
+    frontendUrl: env.frontendUrl,
+    resetLinkBase: env.resetLinkBase,
+    trustProxy: env.trustProxy,
+    allowedOrigins: env.allowedOrigins,
+    emailProvider: env.emailProvider,
+  };
 }
