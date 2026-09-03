@@ -161,22 +161,26 @@ application-restore drills are documented in `docs/DISASTER_RECOVERY.md`.
 
 ## Deployment notes
 
-- **Backend (e.g. Render/other Node host):** root directory `backend`, build
-  `npm install`, start `npm start`. Set all backend env vars from
-  `backend/.env.example` with production values. Because `MONGODB_URI` must be
-  a real Atlas connection string, provide it during deployment — never commit
-  it.
-- **Frontend (e.g. Vercel/other static host):** root directory `frontend`,
-  framework preset Vite, build `npm run build`, output `dist`. Set
-  `VITE_API_BASE_URL` to your deployed backend URL.
-- **CORS:** set `FRONTEND_URL` on the backend to the deployed frontend URL so
-  the API accepts requests from it.
-- **Database:** MongoDB Atlas. Enable Atlas backups / point-in-time recovery;
-  see the disaster-recovery docs for the full backup strategy, RPO/RTO,
-  retention, and restore checklist.
+Providers finalized in Phase 18C-4: **Vercel** (frontend static host) and
+**Render** (backend). See `docs/DEPLOYMENT.md` for the full environment model.
+- **Backend (Render).** The `backend/render.yaml` Blueprint declares the staging
+  Web Service: root directory `backend`, build `npm install`, start `npm start`,
+  health check `/api/health`. Set all backend env vars from
+  `backend/.env.example` with **staging/production** values in the service's
+  Environment tab; never commit real secrets.
+- **Frontend (Vercel).** The `frontend/vercel.json` defines the Vite build
+  (`npm run build`, output `dist`) and a rewrite so deep routes (`/admin`,
+  `/notices/...`, `/gallery`, ...) render the SPA instead of 404. Set
+  `VITE_API_BASE_URL` in the matching Vercel environment (staging/production).
+- **CORS:** set `ALLOWED_ORIGINS` (and `FRONTEND_URL`/`RESET_LINK_BASE`) on the
+  backend to the deployed frontend URL for that environment; no wildcard.
+- **Database:** MongoDB Atlas, isolated per environment. Enable Atlas backups /
+  point-in-time recovery; see the disaster-recovery docs for the backup
+  strategy, RPO/RTO, retention, and restore checklist.
 - **Admin bootstrap:** `/api/auth/register` is open only while the `users`
-  collection is empty, so you can create the first admin. After that, create
-  additional users from the admin panel rather than the public register route.
+  collection is empty, so a fresh staging/production database's first account
+  is its admin. After that, create additional users from the admin panel rather
+  than the public register route.
 
 ---
 

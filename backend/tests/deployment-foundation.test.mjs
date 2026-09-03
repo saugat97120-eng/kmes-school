@@ -20,10 +20,11 @@ const ENV_MJS = "file:///" + path.resolve(__dirname, "../src/config/env.js").rep
 const SEED_GUARD_MJS = "file:///" + path.resolve(__dirname, "../src/config/seedGuard.js").replaceAll("\\", "/");
 
 const PROBE = `
-  import { env, validateProductionConfiguration, getPublicConfigSnapshot } from ${JSON.stringify(ENV_MJS)};
+  import { env, validateProductionConfiguration, validateStagingConfiguration, getPublicConfigSnapshot } from ${JSON.stringify(ENV_MJS)};
   process.stdout.write(JSON.stringify({
     snap: getPublicConfigSnapshot(),
     problems: validateProductionConfiguration(),
+    stagingProblems: validateStagingConfiguration(),
     hasWildcardOrigin: env.allowedOrigins.includes("*"),
   }));
 `;
@@ -201,5 +202,33 @@ check("trust proxy is numeric/string passthrough (0 default)", () => {
   assert.strictEqual(r.parsed.snap.trustProxy, "2");
 });
 
-console.log(`\nPHASE_18C3_DEPLOYMENT_FOUNDATION: ${totals.pass} PASS, ${totals.fail} FAIL`);
+// --- Phase 18C-4: staging config validation (never affects production) ---
+check("staging validation flags missing DB/JWT and fallback-localhost CORS", () => {
+  const r = probe({ NODE_ENV: "staging" });
+  assert.ok(r.parsed.stagingProblems.some((p) => p.includes("MONGODB_URI")));
+  assert.ok(r.parsed.stagingProblems.some((p) => p.includes("JWT_SECRET")));
+  assert.ok(r.parsed.stagingProblems.some((p) => p.includes("ALLOWED_ORIGINS is not set")));
+  // The staging validator must NOT exercise the production validator on prod.
+  assert.deepStrictEqual(r.parsed.problems, [], "prod validation untouched by staging env");
+});
+
+check("staging validation flags a wildcard CORS origin", () => {
+  const r = probe({ NODE_ENV: "staging", MONGODB_URI: "mongodb://x", JWT_SECRET: "s", ALLOWED_ORIGINS: "*" });
+  assert.ok(r.parsed.stagingProblems.some((p) => p.includes("wildcard")));
+  assert.strictEqual(r.parsed.hasWildcardOrigin, true);
+});
+
+check("valid staging config produces no validation problems", () => {
+  const r = probe({
+    NODE_ENV: "staging",
+    MONGODB_URI: "mongodb://staging",
+    JWT_SECRET: "staging-secret",
+    ALLOWED_ORIGINS: "https://staging.schooldomain.com",
+    RESET_LINK_BASE: "https://staging.schooldomain.com",
+  });
+  assert.deepStrictEqual(r.parsed.stagingProblems, []);
+  assert.deepStrictEqual(r.parsed.problems, [], "prod validation stays empty in staging");
+});
+
+console.log(`\nPHASE_18C4_STAGING_FOUNDATION: ${totals.pass} PASS, ${totals.fail} FAIL`);
 if (totals.fail > 0) process.exit(1);

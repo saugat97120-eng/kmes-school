@@ -1,0 +1,67 @@
+# Render Blueprint — KMES School backend (Phase 18C-4, STAGING)
+#
+# This file is the machine-readable definition used by Render to create the
+# STAGING backend service. It declares the Web Service name, root directory,
+# start command, health check, and every environment variable NAME.
+#
+# SECURITY: This file intentionally contains NO secret values. Every secret
+# (`MONGODB_URI`, `JWT_SECRET`, Cloudinary, Facebook, AI) is entered by an
+# operator in the Render dashboard "Environment" tab / service settings using
+# the variable names declared below. Never commit real values.
+#
+# The `rootDir: backend` points Render at the Express application; the service
+# auto-selects Node. `NODE_ENV` is set to `staging` so the app runs in its
+# isolated pre-production mode (never production).
+
+services:
+  - type: web
+    name: kmes-staging-api
+    runtime: node
+    rootDir: backend
+    plan: starter
+    envVars:
+      - key: NODE_ENV
+        value: staging
+      - key: PORT
+        value: 10000
+      - key: ALLOWED_ORIGINS
+        value: https://staging.schooldomain.com
+      - key: FRONTEND_URL
+        value: https://staging.schooldomain.com
+      - key: CLIENT_URL
+        value: https://staging.schooldomain.com
+      - key: RESET_LINK_BASE
+        value: https://staging.schooldomain.com
+      - key: TRUST_PROXY
+        value: "1"
+      - key: EMAIL_PROVIDER
+        value: mock
+      - key: AI_PROVIDER
+        value: mock
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: FACEBOOK_APP_ID
+        sync: false
+      - key: FACEBOOK_APP_SECRET
+        sync: false
+      - key: FACEBOOK_PAGE_ID
+        sync: false
+      - key: FACEBOOK_PAGE_ACCESS_TOKEN
+        sync: false
+      - key: AI_API_KEY
+        sync: false
+      - key: AI_MODEL
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+    # Backend has no build step; source runs directly.
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true

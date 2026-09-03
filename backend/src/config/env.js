@@ -100,6 +100,34 @@ export function validateProductionConfiguration() {
   return problems;
 }
 
+// Phase 18C-4: staging-only validation. Mirrors the production check for
+// staging's critical values so a misconfigured staging boots with clear
+// warnings (never secret values) instead of failing silently per-request.
+// Staging is still a non-production environment: optional integrations (AI,
+// Facebook, Cloudinary, email) may stay unconfigured without crashing.
+export function validateStagingConfiguration() {
+  const problems = [];
+  if (env.nodeEnv === "staging") {
+    if (!env.mongoUri) problems.push("MONGODB_URI is not set. Database routes will fail.");
+    if (!env.jwtSecret) problems.push("JWT_SECRET is not set. Authentication/signing will fail.");
+    if (env.allowedOrigins.length === 0) {
+      problems.push("No staging frontend origin is configured for CORS.");
+    } else if (env.allowedOrigins.includes("*")) {
+      problems.push("CORS allow-list must not contain a wildcard '*' origin.");
+    } else if (
+      env.allowedOrigins.length === 1 &&
+      env.allowedOrigins[0] === "http://localhost:5173" &&
+      !process.env.ALLOWED_ORIGINS
+    ) {
+      // ALLOWED_ORIGINS was not supplied, so the allow-list fell back to the
+      // development default. On staging that would silently permit a local
+      // origin — a misconfiguration that must surface at boot.
+      problems.push("ALLOWED_ORIGINS is not set; staging would fall back to localhost.");
+    }
+  }
+  return problems;
+}
+
 // Exposed for focused configuration tests (Phase 18C-3). Never returns secret
 // values — only the resolved non-secret configuration the rest of the app uses.
 export function getPublicConfigSnapshot() {

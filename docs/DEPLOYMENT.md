@@ -256,3 +256,102 @@ This phase ships **configuration separation only** — no outbound service calls
   scoped per environment.
 
 None of these connect to any external provider during this phase.
+
+---
+
+## 14. Staging environment (Phase 18C-4)
+
+Provider decisions finalized for the staging environment (Phase 18C-4):
+
+| Layer | Provider | Staging |
+|---|---|---|
+| Frontend host | **Vercel** | Preview / staging deployment |
+| Backend host | **Render** | `kmes-staging-api` Web Service |
+| Database | **MongoDB Atlas** | separate staging cluster/database |
+| Media | **Cloudinary** | separate staging cloud/account |
+| Facebook | — | test Page / mock / disabled |
+| AI | — | `mock` / restricted |
+| Email | — | `mock` / sandbox |
+
+The staging domain structure uses the approved subdomains:
+
+- Frontend: `https://staging.schooldomain.com`
+- API: `https://staging-api.schooldomain.com`
+
+> If the school domain DNS is not yet configured, the providers' temporary
+> staging/preview URLs are used instead. Production DNS is never modified here.
+
+### 14.1 SPA routing (Vercel)
+
+`frontend/vercel.json` declares the Vercel rewrite so **every** path returns
+`index.html` (BrowserRouter SPA fallback):
+
+```json
+{
+  "framework": "vite",
+  "buildCommand": "vite build",
+  "outputDirectory": "dist",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}
+```
+
+A direct request to `/admin`, `/notices/123`, `/events/...`, `/gallery`,
+`/achievements`, or `/admissions` therefore renders the app instead of a 404.
+
+### 14.2 Backend (Render)
+
+`backend/render.yaml` is a Render Blueprint declaring the staging Web Service:
+root directory `backend`, Node runtime, `npm start`, health check at
+`/api/health`, and the full environment-variable **names** (`NODE_ENV=staging`,
+`PORT`, CORS/URLs, `TRUST_PROXY=1`, `EMAIL_PROVIDER=mock`, `AI_PROVIDER=mock`).
+
+Secrets are declared with `sync: false` and must be entered by an operator in
+the Render dashboard (Environment tab). Render sits behind a trusted proxy, so
+`TRUST_PROXY=1` lets rate limiting see the real client IP.
+
+### 14.3 Staging environment variable names (values entered in dashboards)
+
+Backend (server-side, in the Render **staging** service): `NODE_ENV`, `PORT`,
+`MONGODB_URI`, `JWT_SECRET`, `ALLOWED_ORIGINS`, `FRONTEND_URL`, `CLIENT_URL`,
+`TRUST_PROXY`, `RESET_LINK_BASE`, `CLOUDINARY_CLOUD_NAME`,
+`CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `FACEBOOK_APP_ID`,
+`FACEBOOK_APP_SECRET`, `FACEBOOK_PAGE_ID`, `FACEBOOK_PAGE_ACCESS_TOKEN`,
+`AI_PROVIDER`, `AI_API_KEY`, `AI_MODEL`, `EMAIL_PROVIDER`.
+
+Frontend (build-time, in the Vercel **staging** project's Environment
+Variables for the staging environment/preset): `VITE_API_BASE_URL` set to the
+staging API URL so the built SPA never falls back to `http://localhost:5000`.
+
+### 14.4 Staging CORS, health, reset links, seed
+
+- `ALLOWED_ORIGINS` must contain **only** the staging frontend origin.
+  `production frontend → staging API` and `random origin → staging API` are
+  blocked (no `Access-Control-Allow-Origin` header). No wildcard is ever used.
+- `GET /api/health` returns `200` (staging DB reachable) or `503` (DB
+  unavailable); the response never leaks secrets.
+- `RESET_LINK_BASE=https://staging.schooldomain.com` keeps every staging reset
+  email pointed at the staging site, never production.
+- Seed on staging uses the guarded mechanism only — `NODE_ENV=staging` (never
+  production) plus explicit `--allow-destructive`, pointed at the **staging**
+  DB. It is never run automatically.
+
+### 14.5 Staging data
+
+Staging uses a **small, controlled** dataset with the guarded seeding mechanism
+or hand-curated records. Real student/personal/private school data is never
+imported. The staging MongoDB cluster and the staging Cloudinary environment are
+purpose-built and isolated from production.
+
+### 14.6 Staging admin
+
+`ensureDevelopmentAdminUser()` is hard-gated to `NODE_ENV=development` and never
+runs in staging/production, and the seed script inserts content only (it does
+not create an admin). The **approved** staging admin bootstrap is the existing
+first-admin register route: `/api/auth/register` is open **only while the
+`users` collection is empty**. On a freshly-created staging database the first
+account created via that route is the staging admin. Use a **unique**
+staging-only email and password (never the dev or production value). After the
+first account exists, additional users are created from the admin panel.
+Verify by logging in on the staging site. Credentials are never printed,
+committed, reused from production, or copied from another environment's user
+table.

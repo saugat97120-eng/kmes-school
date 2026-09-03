@@ -6,7 +6,7 @@ import dotenv from "dotenv";
 import rateLimit from "express-rate-limit";
 
 import { connectDB, registerGracefulShutdown } from "./config/database.js";
-import { env, isProduction, validateProductionConfiguration } from "./config/env.js";
+import { env, isProduction, validateProductionConfiguration, validateStagingConfiguration } from "./config/env.js";
 import { notFound, errorHandler } from "./middleware/errorHandler.js";
 import { sanitizeInput } from "./middleware/sanitizeInput.js";
 
@@ -38,12 +38,17 @@ const PORT = env.port;
 
 await connectDB();
 
-// Clear startup warnings in production when critical config is missing. We do
-// NOT hard-crash: optional integrations stay disabled until configured, and an
-// attempt to use them returns the existing safe per-request config error.
+// Clear startup warnings when critical config is missing. We do NOT hard-crash:
+// optional integrations stay disabled until configured, and an attempt to use
+// them returns the existing safe per-request config error. The production check
+// applies only to NODE_ENV=production; the staging check only to NODE_ENV=staging.
 if (isProduction()) {
   for (const problem of validateProductionConfiguration()) {
     console.warn(`[config] ${problem}`);
+  }
+} else if (env.nodeEnv === "staging") {
+  for (const problem of validateStagingConfiguration()) {
+    console.warn(`[config][staging] ${problem}`);
   }
 }
 
