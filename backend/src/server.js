@@ -5,7 +5,7 @@ import morgan from "morgan";
 import dotenv from "dotenv";
 import rateLimit from "express-rate-limit";
 
-import { connectDB } from "./config/database.js";
+import { connectDB, registerGracefulShutdown } from "./config/database.js";
 import { env, isProduction, validateProductionConfiguration } from "./config/env.js";
 import { notFound, errorHandler } from "./middleware/errorHandler.js";
 import { sanitizeInput } from "./middleware/sanitizeInput.js";
@@ -107,3 +107,6 @@ app.use(errorHandler);
 app.listen(PORT, () => {
   console.log(`KMES Backend running on http://localhost:${PORT}`);
 });
+
+// Graceful shutdown wiring (closes MongoDB cleanly on SIGINT/SIGTERM).
+registerGracefulShutdown();

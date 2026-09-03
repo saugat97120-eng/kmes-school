@@ -46,6 +46,10 @@ export const env = {
   devAdminEmail: process.env.DEV_ADMIN_EMAIL || "",
   devAdminPassword: process.env.DEV_ADMIN_PASSWORD || "",
 
+  // Phase 18B: email delivery. mock = in-memory only (no real send); none/blank
+  // keeps a safe no-op adapter. A future production value e.g. `smtp|resend`.
+  emailProvider: process.env.EMAIL_PROVIDER || "mock",
+
   clientOrigin: process.env.CLIENT_URL || process.env.FRONTEND_URL || "http://localhost:5173",
 };
 
