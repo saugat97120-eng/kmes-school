@@ -3,6 +3,7 @@ import SiteSettings from "../models/SiteSettings.js";
 import { requireAuth } from "../middleware/auth.js";
 import { requirePermission, PERMISSIONS } from "../middleware/roles.js";
 import { logActivity } from "../utils/logActivity.js";
+import { sanitizeSiteSettings } from "../utils/cmsValidation.js";
 
 const router = express.Router();
 
@@ -42,7 +43,15 @@ router.post("/", requireAuth, requirePermission(PERMISSIONS.SETTINGS_EDIT), asyn
       });
     }
 
-    const item = await SiteSettings.create(req.body);
+    // Phase 18C: explicit allow-list + type/URL validation. Unknown fields are
+    // stripped (never persisted); invalid known fields fail with a 400 detailing
+    // each problem.
+    const result = sanitizeSiteSettings(req.body);
+    if (!result.ok) {
+      return res.status(400).json({ success: false, message: "Validation failed.", errors: result.errors });
+    }
+
+    const item = await SiteSettings.create(result.payload);
     res.status(201).json({ success: true, data: item });
   } catch (err) {
     next(err);
@@ -51,7 +60,12 @@ router.post("/", requireAuth, requirePermission(PERMISSIONS.SETTINGS_EDIT), asyn
 
 router.put("/:id", requireAuth, requirePermission(PERMISSIONS.SETTINGS_EDIT), async (req, res, next) => {
   try {
-    const item = await SiteSettings.findByIdAndUpdate(req.params.id, req.body, {
+    const result = sanitizeSiteSettings(req.body);
+    if (!result.ok) {
+      return res.status(400).json({ success: false, message: "Validation failed.", errors: result.errors });
+    }
+
+    const item = await SiteSettings.findByIdAndUpdate(req.params.id, result.payload, {
       new: true,
       runValidators: true,
     });

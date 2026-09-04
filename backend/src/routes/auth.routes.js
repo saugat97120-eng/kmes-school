@@ -5,12 +5,13 @@ import { body, validationResult } from "express-validator";
 import User from "../models/User.js";
 import { requireAuth } from "../middleware/auth.js";
 import { getPermissionsForRole } from "../permissions.js";
-import { env } from "../config/env.js";
 import {
-  sendPasswordReset,
-  getMockEmailAdapter,
-  getEmailAdapter,
-} from "../integrations/email/emailService.js";
+  generateResetToken,
+  hashResetToken,
+  buildResetLink,
+  GENERIC_RESET_RESPONSE,
+} from "../utils/resetToken.js";
+import { sendPasswordReset } from "../integrations/email/emailService.js";
 
 const router = express.Router();
 
@@ -63,35 +64,9 @@ function signToken(user) {
 }
 
 // --- Phase 18B: secure password reset --------------------------------------
-
-// Cryptographically secure random token. 32 random bytes -> 43-char URL-safe
-// string (see RFC 4648). Never persisted in plaintext.
-function generateResetToken() {
-  return crypto.randomBytes(32).toString("base64url");
-}
-
-// Only a hash of the token is ever stored in MongoDB (a single-use bearer
-// secret). SHA-256 of a high-entropy random token is appropriate here because
-// the token is unguessable; this keeps the stored value one-way and lets us
-// compare by re-hashing the presented token.
-function hashResetToken(token) {
-  return crypto.createHash("sha256").update(token).digest("hex");
-}
-
-// Generic success payload so callers cannot tell whether an account exists.
-const GENERIC_RESET_RESPONSE = {
-  success: true,
-  message: "If that email address is registered, a password reset has been initiated.",
-};
-
-// Build the reset link the end user clicks. Uses the configured reset-link base
-// (RESET_LINK_BASE, falling back to FRONTEND_URL) so staging and production can
-// never cross-link; the raw token is carried in the link for the provider to
-// deliver, is never stored, and is never logged.
-function buildResetLink(resetToken) {
-  const base = env.resetLinkBase;
-  return `${base}/reset-password?token=${encodeURIComponent(resetToken)}`;
-}
+// Token generation, hashing, the generic response, and reset-link construction
+// live in src/utils/resetToken.js (pure + unit-tested offline). The route below
+// orchestrates storage, delivery, and invalidation only.
 
 // POST /api/auth/forgot-password
 // Always returns the generic response. Generates a token + stores its hash ONLY
@@ -127,12 +102,18 @@ router.post(
         await user.save({ validateBeforeSave: false });
 
         // Deliver via the email abstraction. Never logs the raw token.
-        const provider = getEmailAdapter();
-        await sendPasswordReset({
-          to: email,
-          resetToken,
-          resetClientUrl: buildResetLink(resetToken),
-        });
+        // Phase 18C-4: if the provider fails (e.g. SMTP not configured /
+        // unreachable), STILL return the generic response so account existence
+        // and the token are never revealed. Only safe diagnostics are logged.
+        try {
+          await sendPasswordReset({
+            to: email,
+            resetToken,
+            resetClientUrl: buildResetLink(resetToken),
+          });
+        } catch (err) {
+          console.error("Password reset email delivery failed:", err.message);
+        }
       }
 
       return res.status(200).json(GENERIC_RESET_RESPONSE);

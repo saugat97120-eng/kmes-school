@@ -1,5 +1,6 @@
 import multer from "multer";
 import path from "path";
+import { validateImageUpload } from "../utils/fileValidation.js";
 
 const ALLOWED_TYPES = {
   "application/pdf": { ext: ".pdf", type: "pdf", name: "PDF Document" },
@@ -109,6 +110,20 @@ export function validateAttachmentFile(req, res, next) {
       success: false,
       message: "File too large. Maximum size: 10MB",
     });
+  }
+
+  // Phase 18C-3: for image attachments, verify the actual content signatures
+  // (magic bytes) match the declared image type. Documents (raw) keep the
+  // existing extension/allow-list enforcement.
+  if (fileInfo.type === "image") {
+    const check = validateImageUpload({
+      buffer: req.file.buffer,
+      mimetype: req.file.mimetype,
+      maxBytes: MAX_FILE_SIZE,
+    });
+    if (!check.ok) {
+      return res.status(400).json({ success: false, message: check.reason });
+    }
   }
 
   req.fileMetadata = {

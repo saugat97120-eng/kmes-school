@@ -58,7 +58,13 @@ Source of truth for variable **names**: `backend/.env.example` and
 | `AI_MODEL` | No | blank | test model | prod model |
 | `DEV_ADMIN_EMAIL` | No | dev value | *(unset)* | *(unset)* |
 | `DEV_ADMIN_PASSWORD` | **Yes** | dev value | *(unset)* | *(unset)* |
-| `EMAIL_PROVIDER` | No | `mock` | `mock`/sandbox | transactional API |
+| `EMAIL_PROVIDER` | No | `mock` | `mock`/sandbox | `smtp` (or `mock` until SMTP is ready) |
+| `SMTP_HOST` | No | blank | staging relay/sandbox | production relay |
+| `SMTP_PORT` | No | `587` | `587`/`465` | `587`/`465` |
+| `SMTP_USER` | **Yes** | blank | staging user | prod user |
+| `SMTP_PASS` | **Yes** | blank | staging pass | prod pass |
+| `EMAIL_FROM` | No | blank | staging sender | prod sender |
+| `EMAIL_FROM_NAME` | No | blank | `KMES School` | `KMES School` |
 | `RESET_LINK_BASE` | No | `http://localhost:5173` | staging URL | prod URL |
 
 \* `CLOUDINARY_CLOUD_NAME` is an account identifier (not a secret) but is bundled
@@ -138,8 +144,9 @@ unchanged.
 
 ## 6. Password-reset link base (`RESET_LINK_BASE`)
 
-`buildResetLink()` in `backend/src/routes/auth.routes.js` now uses
-`env.resetLinkBase`, which is resolved as:
+`buildResetLink()` in `backend/src/utils/resetToken.js` (moved from
+`auth.routes.js` in Phase 18C) now uses `env.resetLinkBase`, which is resolved
+as:
 
 ```
 RESET_LINK_BASE  ||  FRONTEND_URL  ||  http://localhost:5173
@@ -236,6 +243,12 @@ placeholders only.
 5. `node src/seed.js` exits non-destructively in production (blocked) and
    requires `--allow-destructive` elsewhere.
 6. Reset links use the environment's `RESET_LINK_BASE`.
+7. Upload and attachment endpoints reject spoofed image content with a `400`
+   (magic-byte check) and never crash when Cloudinary env is absent.
+8. CMS write endpoints (site-settings / page-content) return `400` with an
+   `errors[]` array for invalid payloads and strip unknown fields.
+9. `EMAIL_PROVIDER=smtp` without `SMTP_HOST` still returns the generic
+   forgot-password response (no account enumeration, no token leak).
 
 ---
 
@@ -251,11 +264,18 @@ This phase ships **configuration separation only** — no outbound service calls
 - **AI:** production uses a server-side key; staging uses `mock`/a restricted key;
   development uses `mock`. AI output is suggestion-only and human-applied; the
   30s timeout and safe error codes are preserved.
-- **Email:** the mock/no-op adapter is the production default until a real
-  provider is selected (later). `RESET_LINK_BASE` keeps reset delivery correctly
-  scoped per environment.
+- **Email:** `EMAIL_PROVIDER=mock` (in-memory) or `none` (no-op) are the safe
+  defaults. `EMAIL_PROVIDER=smtp` (Phase 18C-4) enables real delivery via
+  Nodemailer and requires `SMTP_HOST` (+ `SMTP_PORT`, and both `SMTP_USER` and
+  `SMTP_PASS` together, or neither for an auth-less relay) plus an optional
+  `EMAIL_FROM`/`EMAIL_FROM_NAME`. If `SMTP_HOST` is missing at boot the server
+  logs a configuration warning; the forgot-password flow still returns its
+  **generic** response so account existence and tokens are never revealed.
+  `RESET_LINK_BASE` keeps reset delivery correctly scoped per environment.
 
-None of these connect to any external provider during this phase.
+None of these connect to any external provider from development/mock
+configurations. Only a fully configured integration (or `EMAIL_PROVIDER=smtp`
+with SMTP env) makes outbound calls.
 
 ---
 
@@ -303,7 +323,9 @@ A direct request to `/admin`, `/notices/123`, `/events/...`, `/gallery`,
 `backend/render.yaml` is a Render Blueprint declaring the staging Web Service:
 root directory `backend`, Node runtime, `npm start`, health check at
 `/api/health`, and the full environment-variable **names** (`NODE_ENV=staging`,
-`PORT`, CORS/URLs, `TRUST_PROXY=1`, `EMAIL_PROVIDER=mock`, `AI_PROVIDER=mock`).
+`PORT`, CORS/URLs, `TRUST_PROXY=1`, `EMAIL_PROVIDER=mock`, `AI_PROVIDER=mock`). Phase 18C-4 added
+the `SMTP_*` and `EMAIL_FROM*` secret **names** (`sync: false`) so the staging
+service can be switched to real SMTP delivery without changing the blueprint.
 
 Secrets are declared with `sync: false` and must be entered by an operator in
 the Render dashboard (Environment tab). Render sits behind a trusted proxy, so
@@ -316,7 +338,8 @@ Backend (server-side, in the Render **staging** service): `NODE_ENV`, `PORT`,
 `TRUST_PROXY`, `RESET_LINK_BASE`, `CLOUDINARY_CLOUD_NAME`,
 `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `FACEBOOK_APP_ID`,
 `FACEBOOK_APP_SECRET`, `FACEBOOK_PAGE_ID`, `FACEBOOK_PAGE_ACCESS_TOKEN`,
-`AI_PROVIDER`, `AI_API_KEY`, `AI_MODEL`, `EMAIL_PROVIDER`.
+`AI_PROVIDER`, `AI_API_KEY`, `AI_MODEL`, `EMAIL_PROVIDER`, `SMTP_HOST`,
+`SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `EMAIL_FROM`, `EMAIL_FROM_NAME`.
 
 Frontend (build-time, in the Vercel **staging** project's Environment
 Variables for the staging environment/preset): `VITE_API_BASE_URL` set to the
@@ -355,3 +378,126 @@ first account exists, additional users are created from the admin panel.
 Verify by logging in on the staging site. Credentials are never printed,
 committed, reused from production, or copied from another environment's user
 table.
+
+### 14.7 Current staging frontend origin + the site-settings CORS fix
+
+The **actual** staging frontend served today is the Vercel deployment at:
+
+```
+https://kmes-school-lzs3g1qdw-saugatb40-8093.vercel.app
+```
+
+The backend's CORS allow-list is the **only** thing that can produce a
+browser-side `Access-Control-Allow-Origin` error. The CORS middleware is global,
+applies to every route (site-settings included), delivers correct headers on
+GET/OPTIONS, and keeps headers on error responses (404/405) — verified against
+the live API. If the browser reports a CORS error on `GET /api/site-settings`,
+the Render backend's `ALLOWED_ORIGINS` simply does **not** contain the exact
+`Origin` the frontend is being served from.
+
+Required Render dashboard action (operator):
+
+1. In the Render service Environment tab set
+   `ALLOWED_ORIGINS=https://kmes-school-lzs3g1qdw-saugatb40-8093.vercel.app,https://kmes-school.vercel.app`
+   (keep every Vercel alias you legitimately serve; never add `*`).
+2. Re-deploy / restart the service.
+3. Verify from the browser console that `GET /api/site-settings` now carries
+   `Access-Control-Allow-Origin: <your exact origin>`.
+
+`backend/render.yaml` and `backend/.env.example` already declare these staging
+origins so any blueprint-provisioned service gets them automatically.
+
+---
+
+## 15. Media upload security + Cloudinary readiness (Phase 18C-3)
+
+The naive upload gate relied on the client-supplied `mimetype`. Uploads are now
+verified by **file content** so spoofed payloads (an executable renamed to
+`.jpg`, a hostile SVG/HTML/JS/PHP sent with an `image/*` mimetype, unknown
+binaries) are rejected.
+
+- `backend/src/utils/fileValidation.js` recognizes only the **magic bytes** of
+  JPEG, PNG, WebP, and GIF — nothing else matches, so nothing else is uploaded.
+- `POST /api/upload` validates the buffered content **before** any Cloudinary
+  call; a mismatch between the declared mimetype and the actual bytes returns
+  `400`. When Cloudinary env is absent it returns a safe `400` (it never
+  crashes, and never attempts a network call).
+- The same content check also backs image **attachments**
+  (`backend/src/middleware/attachmentUpload.js`); documents keep the extension
+  + allow-list enforcement.
+- `CLOUDINARY_FOLDERS` (`backend/src/config/cloudinary.js`) pins the production
+  namespace: `kmes-school` (media), `kmes-school/attachments`, and
+  `kmes-school/facebook`. A production cloud stays isolated from other projects.
+- Media deletes pass `resource_type: "image"` explicitly and degrade safely
+  when Cloudinary is unconfigured.
+
+Each environment (dev/staging/production) uses its **own** Cloudinary account
+and `CLOUDINARY_*` credentials. Never share a cloud between environments.
+
+---
+
+## 16. SMTP email delivery (Phase 18C-4)
+
+`EMAIL_PROVIDER=smtp` switches the backend to a Nodemailer `SmtpEmailAdapter`
+(`backend/src/integrations/email/smtpEmailAdapter.js`). Mock and no-op adapters
+are retained and remain the safe defaults.
+
+- Configuration is **environment-only**: `SMTP_HOST`, `SMTP_PORT` (default
+  587; 465 selects implicit TLS), `SMTP_USER`/`SMTP_PASS` (both, or neither),
+  `EMAIL_FROM` (falls back to `SMTP_USER`), `EMAIL_FROM_NAME`.
+- `assertConfigured()` throws cleanly and **before** any network I/O when SMTP
+  env is missing/incomplete; transport errors propagate from Nodemailer.
+- The auth route wraps delivery in a catch that logs only a **safe diagnostic**
+  and still returns the generic reset response — so a broken SMTP relay never
+  reveals account existence or the token. Raw tokens are never logged, never
+  stored (only the SHA-256 hash persists), and only travel inside the delivered
+  reset URL built from `RESET_LINK_BASE`.
+- Boot-time validation (`validateProductionConfiguration`) emits a category-only
+  warning when `EMAIL_PROVIDER=smtp` but `SMTP_HOST` is unset.
+
+On Render, add the `SMTP_*`/`EMAIL_FROM*` values in the service Environment tab
+and set `EMAIL_PROVIDER=smtp`. Verify with a single real forgot-password email.
+
+---
+
+## 17. CMS payload validation (Phase 18C)
+
+`backend/src/utils/cmsValidation.js` makes the accepted field set explicit for
+the two public-CMS write routes:
+
+- **Site settings** and **page content** have fixed allow-lists. Unknown fields —
+  including `_id`, timestamps, and anything the admin form does not define —
+  are **stripped and never persisted**.
+- Known fields are type-checked; URL fields accept http(s) only
+  (`javascript:`/`data:` are rejected); the settings `email` is validated;
+  `published` must be boolean.
+- `POST /api/page-content` requires a `slug` (trimmed + lowercased) and rejects
+  duplicates with `409` (including on `PUT` when a different page already owns
+  the slug).
+- Invalid payloads return `400` with `{ errors: [...] }`.
+
+PageContentManager and SiteSettingsManager already send only allow-listed
+fields, so the frontend is unaffected; the new layer is defense-in-depth against
+future client changes or direct API calls.
+
+---
+
+## 18. Automated tests
+
+Run from `backend/`:
+
+```
+npm test                # unit + integration (mongodb-memory-server, no network)
+npm run test:unit       # offline unit tests (validation, tokens, email selection)
+npm run test:integration# boot full API against a disposable MongoDB
+npm run test:foundation # config/seed/CORS validation (existing)
+npm run test:rbac       # auth/permission smoke (existing)
+```
+
+The integration harness (`backend/tests/phase-18c.integration.mjs`) renames
+`backend/.env` aside, boots the real Express app against `mongodb-memory-server`
+on a disposable port, and exercises upload magic-byte rejection, the
+Cloudinary-unconfigured path, media delete, CMS allow-listing, the full password
+reset lifecycle, and SMTP-failure masking. It never contacts a real provider.
+
+---

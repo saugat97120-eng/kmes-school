@@ -25,17 +25,31 @@ services:
       - key: PORT
         value: 10000
       - key: ALLOWED_ORIGINS
-        value: https://staging.schooldomain.com
+        # Current staging frontend on Vercel (preview URL) joined with the
+        # project root alias so both remain explicitly allowed (no wildcard).
+        value: https://kmes-school-lzs3g1qdw-saugatb40-8093.vercel.app,https://kmes-school.vercel.app
       - key: FRONTEND_URL
-        value: https://staging.schooldomain.com
+        value: https://kmes-school-lzs3g1qdw-saugatb40-8093.vercel.app
       - key: CLIENT_URL
-        value: https://staging.schooldomain.com
+        value: https://kmes-school-lzs3g1qdw-saugatb40-8093.vercel.app
       - key: RESET_LINK_BASE
-        value: https://staging.schooldomain.com
+        value: https://kmes-school-lzs3g1qdw-saugatb40-8093.vercel.app
       - key: TRUST_PROXY
         value: "1"
       - key: EMAIL_PROVIDER
         value: mock
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: EMAIL_FROM_NAME
+        sync: false
       - key: AI_PROVIDER
         value: mock
       - key: CLOUDINARY_CLOUD_NAME

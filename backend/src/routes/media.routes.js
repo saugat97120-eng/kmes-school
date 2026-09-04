@@ -48,7 +48,7 @@ router.delete("/:id", requireAuth, requirePermission(PERMISSIONS.MEDIA_DELETE), 
 
     if (isCloudinaryConfigured()) {
       try {
-        await cloudinary.uploader.destroy(media.publicId);
+        await cloudinary.uploader.destroy(media.publicId, { resource_type: "image" });
       } catch (err) {
         console.error("Cloudinary delete failed:", err.message);
       }

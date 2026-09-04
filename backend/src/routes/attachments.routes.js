@@ -1,5 +1,5 @@
 import express from "express";
-import cloudinary, { isCloudinaryConfigured } from "../config/cloudinary.js";
+import cloudinary, { isCloudinaryConfigured, CLOUDINARY_FOLDERS } from "../config/cloudinary.js";
 import { requireAuth } from "../middleware/auth.js";
 import { requirePermission, PERMISSIONS } from "../middleware/roles.js";
 import { attachmentUpload, validateAttachmentFile } from "../middleware/attachmentUpload.js";
@@ -71,7 +71,7 @@ router.post(
       const result = await new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
           {
-            folder: `kmes-school/attachments/${resource}`,
+            folder: `${CLOUDINARY_FOLDERS.attachments}/${resource}`,
             resource_type: req.fileMetadata.resourceType,
             public_id: `${Date.now()}_${req.file.originalname.split(".")[0]}`,
             overwrite: false,

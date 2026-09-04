@@ -75,8 +75,20 @@ export const env = {
   devAdminPassword: process.env.DEV_ADMIN_PASSWORD || "",
 
   // Phase 18B: email delivery. mock = in-memory only (no real send); none/blank
-  // keeps a safe no-op adapter. A future production value e.g. `smtp|resend`.
+  // keeps a safe no-op adapter. smtp (Phase 18C-4) selects real production
+  // delivery via Nodemailer using SMTP_* below.
   emailProvider: process.env.EMAIL_PROVIDER || "mock",
+
+  // Phase 18C-4: production SMTP email delivery (used when EMAIL_PROVIDER=smtp).
+  // Documented here for startup validation; the SMTP adapter re-reads them from
+  // the live process environment at send time so an operator restart picks up
+  // new values without code changes.
+  smtpHost: process.env.SMTP_HOST || "",
+  smtpPort: process.env.SMTP_PORT || "587",
+  smtpUser: process.env.SMTP_USER || "",
+  smtpPass: process.env.SMTP_PASS || "",
+  emailFrom: process.env.EMAIL_FROM || "",
+  emailFromName: process.env.EMAIL_FROM_NAME || "",
 };
 
 // Validate critical production configuration. Returns an array of generic
@@ -95,6 +107,15 @@ export function validateProductionConfiguration() {
       problems.push("No frontend origin is configured for CORS.");
     } else if (env.allowedOrigins.includes("*")) {
       problems.push("CORS allow-list must not contain a wildcard '*' origin.");
+    }
+    // Phase 18C-4: when a real SMTP provider is requested, fail-fail-open by
+    // warning at boot that delivery will not work until SMTP_* is complete.
+    // Generic category labels only — never values.
+    if (env.emailProvider === "smtp" && !env.smtpHost) {
+      problems.push("EMAIL_PROVIDER is 'smtp' but SMTP_HOST is not set. Password-reset email delivery will fail.");
+    }
+    if (Boolean(env.smtpUser) !== Boolean(env.smtpPass)) {
+      problems.push("SMTP_USER and SMTP_PASS must both be set (or both left empty) for SMTP authentication.");
     }
   }
   return problems;
