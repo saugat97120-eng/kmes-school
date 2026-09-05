@@ -3,7 +3,14 @@
 **Phase:** 17 (Backup, Disaster Recovery & Restore Validation)
 **Scope:** Backups, restore procedure, recovery scenarios, backup security, drills, and regression baseline.
 **Hosting (as discovered):** MongoDB Atlas (cluster `cluster0.ndtzgxk.mongodb.net`) · Cloudinary (media) · Node/Express backend · React frontend.
-**Environment status:** Project is NOT a Git repository. No automated backup scheduler or CI exists in the codebase. All validation in this phase ran on disposable `mongodb-memory-server` databases; **no production database was read or modified.**
+**Environment status (Phase 17):** Project was NOT a Git repository at the time of writing. All validation in this phase ran on disposable `mongodb-memory-server` databases; **no production database was read or modified.**
+
+> **Status update (Phase 18+):** the project is now a Git repository (branch `main`,
+> remote `https://github.com/Saugatbhattarai1010/kmes-school.git`) with a minimal
+> GitHub Actions CI pipeline (`.github/workflows/ci.yml`) covering backend unit
+> tests, frontend build/lint, and `npm audit`. The backup/PITR and monitoring
+> recommendations below remain **operator actions** — their status is recorded in
+> `docs/FINAL_PRODUCTION_VERIFICATION.md`.
 
 ---
 
