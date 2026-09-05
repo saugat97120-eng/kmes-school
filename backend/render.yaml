@@ -38,18 +38,29 @@ services:
         value: "1"
       - key: EMAIL_PROVIDER
         value: mock
+      # Phase 20: bootstrap is STRICTLY disabled by default (only "true" enables).
+      # The email below is the ONLY email that can create the first admin while
+      # ALLOW_ADMIN_BOOTSTRAP=true AND the database is empty.
+      - key: ALLOW_ADMIN_BOOTSTRAP
+        value: "false"
+      - key: ADMIN_BOOTSTRAP_EMAIL
+        value: saugatb40@gmail.com
       - key: SMTP_HOST
         sync: false
       - key: SMTP_PORT
         value: "587"
+      - key: SMTP_SECURE
+        value: "false"
       - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
         sync: false
       - key: SMTP_PASS
         sync: false
       - key: EMAIL_FROM
         sync: false
       - key: EMAIL_FROM_NAME
-        sync: false
+        value: Kaseni Model Secondary English School
       - key: AI_PROVIDER
         value: mock
       - key: CLOUDINARY_CLOUD_NAME

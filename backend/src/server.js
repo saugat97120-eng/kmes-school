@@ -7,6 +7,7 @@ import rateLimit from "express-rate-limit";
 
 import { connectDB, registerGracefulShutdown } from "./config/database.js";
 import { env, isProduction, validateProductionConfiguration, validateStagingConfiguration } from "./config/env.js";
+import { assertEmailProviderConfiguration } from "./integrations/email/emailService.js";
 import { notFound, errorHandler } from "./middleware/errorHandler.js";
 import { sanitizeInput } from "./middleware/sanitizeInput.js";
 
@@ -51,6 +52,12 @@ if (isProduction()) {
     console.warn(`[config][staging] ${problem}`);
   }
 }
+
+// Phase 20: fail predictably at boot if the email provider is invalid or an
+// SMTP provider is requested without its mandatory configuration. This prevents
+// a silent SMTP->mock fallback in production (which would appear to "work" while
+// never delivering real email).
+assertEmailProviderConfiguration();
 
 app.use(helmet());
 // CORS: explicit allow-list of frontend origins (no wildcard). Each environment

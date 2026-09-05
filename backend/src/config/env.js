@@ -1,4 +1,4 @@
-// Phase 12 — Centralized environment configuration reader + validation.
+// Phase 12/20 — Centralized environment configuration reader + validation.
 //
 // This is the single place that documents and reads every environment variable
 // the backend uses. It does NOT load dotenv itself (server.js already does),
@@ -27,6 +27,14 @@ export function isDevelopment() {
 function parseOriginList(raw) {
   if (!raw) return [];
   return [...new Set(raw.split(",").map((s) => s.trim()).filter(Boolean))];
+}
+
+// Phase 20: strict boolean parsing for bootstrap gate. Only the literal
+// string "true" enables bootstrap. Values like "1", "yes", "TRUE", or
+// "false" all resolve to false. This prevents accidental bootstrap
+// enablement in production via environment typo or legacy config.
+function parseStrictBool(raw) {
+  return raw === "true";
 }
 
 // Introduce a small namespace of well-known variables so callers never guess
@@ -89,6 +97,24 @@ export const env = {
   smtpPass: process.env.SMTP_PASS || "",
   emailFrom: process.env.EMAIL_FROM || "",
   emailFromName: process.env.EMAIL_FROM_NAME || "",
+
+  // Phase 20: First-admin bootstrap configuration.
+  // allowAdminBootstrap: strict "true" only; "1"/"yes"/"TRUE" must NOT enable.
+  allowAdminBootstrap: parseStrictBool(process.env.ALLOW_ADMIN_BOOTSTRAP),
+
+  // Phase 20: SMTP_PASSWORD is the primary credential env var; SMTP_PASS is a
+  // back-compat fallback so existing test harnesses that set SMTP_PASS keep
+  // working. The adapter and validation use this resolved value.
+  smtpPassword: process.env.SMTP_PASSWORD || process.env.SMTP_PASS || "",
+
+  // Phase 20: SMTP_SECURE — "true" selects implicit TLS (port 465 convention);
+  // "false" (default) uses STARTTLS on port 587.
+  smtpSecure: process.env.SMTP_SECURE === "true",
+
+  // Phase 20: adminBootstrapEmail — the ONLY email allowed to create the first
+  // admin via public registration. Stored as-is for comparison; the route
+  // normalizes to lowercase before matching.
+  adminBootstrapEmail: (process.env.ADMIN_BOOTSTRAP_EMAIL || "saugatb40@gmail.com").trim(),
 };
 
 // Validate critical production configuration. Returns an array of generic
@@ -108,14 +134,23 @@ export function validateProductionConfiguration() {
     } else if (env.allowedOrigins.includes("*")) {
       problems.push("CORS allow-list must not contain a wildcard '*' origin.");
     }
-    // Phase 18C-4: when a real SMTP provider is requested, fail-fail-open by
-    // warning at boot that delivery will not work until SMTP_* is complete.
-    // Generic category labels only — never values.
-    if (env.emailProvider === "smtp" && !env.smtpHost) {
-      problems.push("EMAIL_PROVIDER is 'smtp' but SMTP_HOST is not set. Password-reset email delivery will fail.");
+    // Phase 20: production must never accidentally leave bootstrap enabled.
+    if (env.allowAdminBootstrap) {
+      problems.push("ALLOW_ADMIN_BOOTSTRAP is enabled in production. Disable after provisioning.");
     }
-    if (Boolean(env.smtpUser) !== Boolean(env.smtpPass)) {
-      problems.push("SMTP_USER and SMTP_PASS must both be set (or both left empty) for SMTP authentication.");
+    // Phase 18C-4 / Phase 20: when a real SMTP provider is requested, warn
+    // at boot that delivery will not work until SMTP_* is complete.
+    // Generic category labels only — never values.
+    if (env.emailProvider === "smtp") {
+      const missing = [];
+      if (!env.smtpHost) missing.push("SMTP_HOST");
+      if (!env.smtpUser) missing.push("SMTP_USER");
+      if (!env.smtpPassword) missing.push("SMTP_PASSWORD");
+      if (missing.length) {
+        problems.push(`EMAIL_PROVIDER is 'smtp' but ${missing.join(", ")} is not set. Password-reset email delivery will fail.`);
+      }
+    } else if (env.emailProvider && env.emailProvider !== "mock" && env.emailProvider !== "none") {
+      problems.push(`Unsupported EMAIL_PROVIDER value. Supported: mock, smtp, none.`);
     }
   }
   return problems;

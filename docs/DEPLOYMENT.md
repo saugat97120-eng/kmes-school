@@ -61,10 +61,14 @@ Source of truth for variable **names**: `backend/.env.example` and
 | `EMAIL_PROVIDER` | No | `mock` | `mock`/sandbox | `smtp` (or `mock` until SMTP is ready) |
 | `SMTP_HOST` | No | blank | staging relay/sandbox | production relay |
 | `SMTP_PORT` | No | `587` | `587`/`465` | `587`/`465` |
+| `SMTP_SECURE` | No | `false` | `false`/`true` | `false`/`true` |
 | `SMTP_USER` | **Yes** | blank | staging user | prod user |
-| `SMTP_PASS` | **Yes** | blank | staging pass | prod pass |
+| `SMTP_PASSWORD` | **Yes** | blank | staging pass | prod pass |
+| `SMTP_PASS` | **Yes** | blank | *(back-compat alias)* | *(back-compat alias)* |
 | `EMAIL_FROM` | No | blank | staging sender | prod sender |
-| `EMAIL_FROM_NAME` | No | blank | `KMES School` | `KMES School` |
+| `EMAIL_FROM_NAME` | No | `Kaseni Model Secondary English School` | school name | school name |
+| `ALLOW_ADMIN_BOOTSTRAP` | No | `false` | `false` | `false` (see §19) |
+| `ADMIN_BOOTSTRAP_EMAIL` | No | `saugatb40@gmail.com` | provision email | provision email |
 | `RESET_LINK_BASE` | No | `http://localhost:5173` | staging URL | prod URL |
 
 \* `CLOUDINARY_CLOUD_NAME` is an account identifier (not a secret) but is bundled
@@ -339,7 +343,9 @@ Backend (server-side, in the Render **staging** service): `NODE_ENV`, `PORT`,
 `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `FACEBOOK_APP_ID`,
 `FACEBOOK_APP_SECRET`, `FACEBOOK_PAGE_ID`, `FACEBOOK_PAGE_ACCESS_TOKEN`,
 `AI_PROVIDER`, `AI_API_KEY`, `AI_MODEL`, `EMAIL_PROVIDER`, `SMTP_HOST`,
-`SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `EMAIL_FROM`, `EMAIL_FROM_NAME`.
+`SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD` (or back-compat
+`SMTP_PASS`), `EMAIL_FROM`, `EMAIL_FROM_NAME`, `ALLOW_ADMIN_BOOTSTRAP`,
+`ADMIN_BOOTSTRAP_EMAIL`.
 
 Frontend (build-time, in the Vercel **staging** project's Environment
 Variables for the staging environment/preset): `VITE_API_BASE_URL` set to the
@@ -369,15 +375,16 @@ purpose-built and isolated from production.
 
 `ensureDevelopmentAdminUser()` is hard-gated to `NODE_ENV=development` and never
 runs in staging/production, and the seed script inserts content only (it does
-not create an admin). The **approved** staging admin bootstrap is the existing
-first-admin register route: `/api/auth/register` is open **only while the
-`users` collection is empty**. On a freshly-created staging database the first
-account created via that route is the staging admin. Use a **unique**
-staging-only email and password (never the dev or production value). After the
-first account exists, additional users are created from the admin panel.
-Verify by logging in on the staging site. Credentials are never printed,
-committed, reused from production, or copied from another environment's user
-table.
+not create an admin). The **approved** admin bootstrap is the Phase 20 register
+route: `/api/auth/register` creates the first (admin) account **only while**
+`users` is empty **AND** `ALLOW_ADMIN_BOOTSTRAP=true` is set **AND** the
+submitted (case-insensitive) email equals `ADMIN_BOOTSTRAP_EMAIL`. Use a
+**unique** environment-specific email and password (never the dev or production
+value), provision with the flag temporarily enabled, then set the flag back to
+`false`. After the first account exists, additional users are created from the
+admin panel. Verify by logging in on the staging site. Credentials are never
+printed, committed, reused from production, or copied from another environment's
+user table.
 
 ### 14.7 Current staging frontend origin + the site-settings CORS fix
 
@@ -436,15 +443,23 @@ and `CLOUDINARY_*` credentials. Never share a cloud between environments.
 
 ---
 
-## 16. SMTP email delivery (Phase 18C-4)
+## 16. SMTP email delivery (Phase 18C-4 / Phase 20)
 
 `EMAIL_PROVIDER=smtp` switches the backend to a Nodemailer `SmtpEmailAdapter`
 (`backend/src/integrations/email/smtpEmailAdapter.js`). Mock and no-op adapters
 are retained and remain the safe defaults.
 
-- Configuration is **environment-only**: `SMTP_HOST`, `SMTP_PORT` (default
-  587; 465 selects implicit TLS), `SMTP_USER`/`SMTP_PASS` (both, or neither),
-  `EMAIL_FROM` (falls back to `SMTP_USER`), `EMAIL_FROM_NAME`.
+- Configuration is **environment-only**: `SMTP_HOST`, `SMTP_PORT` (default 587;
+  `SMTP_SECURE=true` or port 465 selects implicit TLS, everything else STARTTLS),
+  `SMTP_USER`, `SMTP_PASSWORD` (with `SMTP_PASS` kept as a back-compat alias),
+  `EMAIL_FROM` (falls back to `SMTP_USER`), `EMAIL_FROM_NAME` (default
+  `Kaseni Model Secondary English School`).
+- Phase 20: supported providers are `mock | smtp | none`. **Any other value
+  fails startup** (no silent fallback, and SMTP can never silently degrade to
+  mock in production). When `EMAIL_PROVIDER=smtp`, `SMTP_HOST` + `SMTP_USER` +
+  `SMTP_PASSWORD` are all **required at boot**
+  (`assertEmailProviderConfiguration()` in `server.js`), so a half-configured
+  SMTP relay cannot boot into a "never delivers" state.
 - `assertConfigured()` throws cleanly and **before** any network I/O when SMTP
   env is missing/incomplete; transport errors propagate from Nodemailer.
 - The auth route wraps delivery in a catch that logs only a **safe diagnostic**
@@ -452,11 +467,54 @@ are retained and remain the safe defaults.
   reveals account existence or the token. Raw tokens are never logged, never
   stored (only the SHA-256 hash persists), and only travel inside the delivered
   reset URL built from `RESET_LINK_BASE`.
+- Phase 20 adds a best-effort **security notification** email after a successful
+  password reset (generic content only; failures never fail the reset itself).
 - Boot-time validation (`validateProductionConfiguration`) emits a category-only
-  warning when `EMAIL_PROVIDER=smtp` but `SMTP_HOST` is unset.
+  warning when `EMAIL_PROVIDER=smtp` but required SMTP vars are unset, and when
+  `ALLOW_ADMIN_BOOTSTRAP=true` is left on in production.
 
 On Render, add the `SMTP_*`/`EMAIL_FROM*` values in the service Environment tab
 and set `EMAIL_PROVIDER=smtp`. Verify with a single real forgot-password email.
+
+---
+
+## 16a. First-admin bootstrap (Phase 20)
+
+Public registration creates a user **only** when all of these hold, otherwise an
+**identical generic `403`** ("Registration is temporarily unavailable.") is
+returned so attackers cannot distinguish flag-off / wrong-email / already-done:
+
+1. `ALLOW_ADMIN_BOOTSTRAP` is the **literal** string `true` (`"1"`, `"yes"`,
+   `"TRUE"` all count as **off**).
+2. The database has **zero** users.
+3. The submitted email, normalized to lowercase, equals
+   `ADMIN_BOOTSTRAP_EMAIL`.
+4. The payload passes express-validator (`name`, `email`, `password ≥ 6`).
+
+Implementation notes:
+
+- The first user is **always** forced to role `admin` (client-supplied roles are
+  ignored).
+- Concurrency is bounded by a **unique-indexed lock** collection
+  (`admin_bootstrap_locks`). Exactly one simultaneous request can win; every
+  other concurrent request gets the same generic `403`. On success the lock is
+  kept permanently (the open window is closed forever); on failure it is
+  released best-effort so an empty-DB retry still works.
+- After the first account exists, registration is closed **for every email —
+  including the bootstrap email** — even if the flag stays `true`.
+- Provide the real admin password only at provision time in the Render/DB
+  operator session. Never commit, print, or log it.
+
+Provisioning sequence (operator):
+
+1. Deploy the Phase 20 backend. Set `ALLOW_ADMIN_BOOTSTRAP=false`
+   (default) and confirm `POST /api/auth/register` returns the generic `403`.
+2. (If this is the first-ever deployment) ensure the `users` collection is empty.
+3. Temporarily set `ALLOW_ADMIN_BOOTSTRAP=true` (Render dashboard) and redeploy.
+4. `POST /api/auth/register` with `ADMIN_BOOTSTRAP_EMAIL` + a strong,
+   operator-entered password → `201` + admin token. Verify login works.
+5. Set `ALLOW_ADMIN_BOOTSTRAP=false` and redeploy. Re-verify register returns
+   `403` and the admin login still works.
 
 ---
 
@@ -492,6 +550,8 @@ npm run test:unit       # offline unit tests (validation, tokens, email selectio
 npm run test:integration# boot full API against a disposable MongoDB
 npm run test:foundation # config/seed/CORS validation (existing)
 npm run test:rbac       # auth/permission smoke (existing)
+npm run test:phase20    # Phase 20: bootstrap+SMTP unit, registration-closure
+                        # integration, and concurrency-bounded bootstrap harness
 ```
 
 The integration harness (`backend/tests/phase-18c.integration.mjs`) renames

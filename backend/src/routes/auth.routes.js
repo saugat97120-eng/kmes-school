@@ -11,7 +11,15 @@ import {
   buildResetLink,
   GENERIC_RESET_RESPONSE,
 } from "../utils/resetToken.js";
-import { sendPasswordReset } from "../integrations/email/emailService.js";
+import { sendPasswordReset, sendSecurityNotification } from "../integrations/email/emailService.js";
+import { env } from "../config/env.js";
+import {
+  GENERIC_REGISTRATION_DENIED,
+  isAuthorizedBootstrapEmail,
+  normalizeEmail,
+  tryAcquireBootstrapLock,
+  releaseBootstrapLock,
+} from "../utils/adminBootstrap.js";
 
 const router = express.Router();
 
@@ -175,6 +183,20 @@ router.post(
       await user.bumpAuthVersion();
       await user.save();
 
+      // Phase 20: best-effort security notification. Failures are swallowed so
+      // a non-delivered notification never fails the reset itself. No token or
+      // password content is ever included.
+      try {
+        await sendSecurityNotification({
+          to: user.email,
+          subject: "Your KMES School password was changed",
+          text: "The password for your KMES School account was reset. "
+            + "If you did not do this, contact an administrator immediately.",
+        });
+      } catch (err) {
+        console.error("Security notification email delivery failed:", err.message);
+      }
+
       res.json({ success: true, message: "Password has been reset. Please log in with your new password." });
     } catch (err) {
       next(err);
@@ -183,10 +205,23 @@ router.post(
 );
 
 // POST /api/auth/register
-// Bootstrap rule: if no users exist yet, registration is open (so you can
-// create your first admin account). Once at least one user exists, creating
-// another account requires a valid token from an existing admin — this
-// prevents strangers from registering themselves as admin after launch.
+// Phase 20 — First-admin bootstrap. Public registration creates a user ONLY when
+// ALL of the following hold:
+//   - ALLOW_ADMIN_BOOTSTRAP === true (strict literal "true")
+//   - The database currently has ZERO users
+//   - The submitted (normalized) email === ADMIN_BOOTSTRAP_EMAIL
+//   - The payload is valid (name/email/password)
+//
+// Any other request (flag off, wrong email, users already exist, invalid body
+// that fails express-validator) returns an IDENTICAL generic 403 so the service
+// never leaks whether bootstrap is enabled, whether the email is authorized, or
+// whether an account already exists. The first user is ALWAYS forced to role
+// "admin", regardless of what the client sends.
+//
+// Concurrency: acquiring a unique-indexed lock guarantees exactly one request
+// creates the first admin even under simultaneous attempts. On success the lock
+// is kept (the open window is permanently closed); on failure it is released
+// best-effort so a retry against an empty DB can still succeed.
 router.post(
   "/register",
   [
@@ -196,50 +231,62 @@ router.post(
   ],
   async (req, res, next) => {
     try {
+      // Validation failures are safe to return as 400 (malformed input reveals
+      // nothing about authorization or user count).
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({ success: false, errors: errors.array() });
       }
 
-      const userCount = await User.countDocuments();
-
-      if (userCount > 0) {
-        const header = req.headers.authorization || "";
-        const token = header.startsWith("Bearer ") ? header.slice(7) : null;
-        let requester = null;
-        try {
-          requester = token ? jwt.verify(token, process.env.JWT_SECRET) : null;
-        } catch {
-          requester = null;
-        }
-        // Resolve the CURRENT role from the database, not the (possibly stale)
-        // JWT role, so a demoted user cannot bootstrap new admin accounts.
-        if (requester) {
-          const dbUser = await User.findById(requester.id).select("role");
-          requester = dbUser ? { ...requester, role: dbUser.role } : null;
-        }
-        if (!requester || requester.role !== "admin") {
-          return res.status(403).json({
-            success: false,
-            message: "Registration is closed. Ask an existing admin to create your account.",
-          });
-        }
+      // Bootstrap must be explicitly enabled AND the email must be authorized
+      // (case-insensitive). Nothing else about this comparison is revealed.
+      const email = normalizeEmail(req.body.email);
+      if (!env.allowAdminBootstrap || !isAuthorizedBootstrapEmail(email)) {
+        return res.status(403).json(GENERIC_REGISTRATION_DENIED);
       }
 
-      const existing = await User.findOne({ email: req.body.email });
-      if (existing) {
-        return res.status(409).json({ success: false, message: "Email already registered" });
+      // The database must have zero users. This re-check happens AFTER acquiring
+      // the lock so two racing requests cannot both observe zero and both create.
+      const acquired = await tryAcquireBootstrapLock();
+      if (!acquired) {
+        return res.status(403).json(GENERIC_REGISTRATION_DENIED);
       }
 
-      // First-ever account is always an admin, regardless of what's sent.
-      const role = userCount === 0 ? "admin" : req.body.role === "editor" ? "editor" : "admin";
+      let created = false;
+      try {
+        const userCount = await User.countDocuments();
+        if (userCount > 0) {
+          return res.status(403).json(GENERIC_REGISTRATION_DENIED);
+        }
 
-      const user = await User.create({ ...req.body, role });
-      res.status(201).json({
-        success: true,
-        token: signToken(user),
-        user: publicUser(user),
-      });
+        const existing = await User.findOne({ email });
+        if (existing) {
+          return res.status(403).json(GENERIC_REGISTRATION_DENIED);
+        }
+
+        // First-ever account is ALWAYS an admin, regardless of what's sent.
+        const user = await User.create({
+          name: req.body.name,
+          email,
+          password: req.body.password,
+          role: "admin",
+        });
+        created = true;
+        return res.status(201).json({
+          success: true,
+          token: signToken(user),
+          user: publicUser(user),
+        });
+      } finally {
+        // On success the lock stays (window closed forever). Only a failed
+        // creation (no admin persisted) releases it so an empty-DB retry can work.
+        if (!created) {
+          const stillEmpty = (await User.countDocuments()) === 0;
+          if (stillEmpty) {
+            await releaseBootstrapLock();
+          }
+        }
+      }
     } catch (err) {
       next(err);
     }

@@ -24,6 +24,7 @@ export class MockEmailAdapter {
 
   clear() {
     this.deliveries.length = 0;
+    this.securityNotifications = [];
   }
 
   // Never performs a real email send. Records a sanitized delivery record for
@@ -32,6 +33,14 @@ export class MockEmailAdapter {
   // that must complete a reset end-to-end.
   async sendPasswordReset({ to, resetToken, resetClientUrl }) {
     this.deliveries.push({ to, resetToken, resetClientUrl });
+    return { ok: true, mock: true };
+  }
+
+  // Phase 20: security notifications (e.g. post-reset). Recorded separately so
+  // tests can assert they fire without corrupting password-reset counts.
+  async sendSecurityNotification({ to, subject, text }) {
+    this.securityNotifications = this.securityNotifications || [];
+    this.securityNotifications.push({ to, subject, text });
     return { ok: true, mock: true };
   }
 
@@ -46,6 +55,11 @@ export class MockEmailAdapter {
 export class NoopEmailAdapter {
   async sendPasswordReset({ to }) {
     // Intentionally does nothing (production provider not configured yet).
+    return { ok: true, mock: true };
+  }
+
+  async sendSecurityNotification() {
+    // Intentionally does nothing.
     return { ok: true, mock: true };
   }
 }

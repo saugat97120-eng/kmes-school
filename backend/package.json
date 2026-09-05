@@ -10,7 +10,8 @@
     "test:unit": "node tests/phase-18c.unit.mjs",
     "test:integration": "node tests/phase-18c.integration.mjs",
     "test:foundation": "node tests/deployment-foundation.test.mjs",
-    "test:rbac": "node tests/rbac.smoke.mjs"
+    "test:rbac": "node tests/rbac.smoke.mjs",
+    "test:phase20": "node tests/phase-20.unit.mjs && node tests/phase-20.integration.mjs && node tests/phase-20.bootstrap.mjs"
   },
   "engines": {
     "node": ">=18.0.0"
