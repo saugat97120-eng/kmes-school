@@ -3,7 +3,7 @@
 
 **Date:** 2026-09-05
 **Verifier:** Senior production engineer (automated + live inspection)
-**Commit verified:** `abaa5b0eeb72c17f9f09301b25233612283fe625`
+**Commit verified:** `897c7d280c2f79bad3691184f01d8912f044b510` (HEAD == origin/main, clean)
 **Production frontend:** `https://kmes-school.vercel.app`
 **Production backend:** `https://kmes-school.onrender.com`
 
@@ -49,11 +49,14 @@ None of the critical security blockers from the brief apply.
 
 ```
 Branch    : main
-HEAD      : abaa5b0eeb72c17f9f09301b25233612283fe625
-origin/main: abaa5b0eeb72c17f9f09301b25233612283fe625
+HEAD      : 897c7d280c2f79bad3691184f01d8912f044b510
+origin/main: 897c7d280c2f79bad3691184f01d8912f044b510
 Status    : clean (nothing to commit)
 Remote    : https://github.com/Saugatbhattarai1010/kmes-school.git
 Version control: Git (monorepo frontend + backend + docs)
+
+897c7d2 feat: complete final production verification
+abaa5b0 feat: harden first-admin bootstrap and enable smtp email
 ```
 
 ---
@@ -78,7 +81,7 @@ Version control: Git (monorepo frontend + backend + docs)
 | SPA deep links (`/about`, `/academics`, `/notices`, `/admin/login`, fake `/api/...`) | **PASS** | all 200 (SPA shell, vercel.json rewrites) |
 | Build succeeds | **PASS** | `vite build` → 420 kB JS, 38 kB CSS |
 | Lint | **PASS WITH CAVEAT** | 0 errors, 8 pre-existing warnings (react fast-refresh / set-state-in-effect); not rewritten per brief |
-| Production API wiring | **PASS** | deployed bundle contains `kmes-school.onrender.com`; **no** `localhost:5000` |
+| Production API wiring | **PASS** | deployed bundle `index-B1QKFfus.js` contains `kmes-school.onrender.com`; **no** `localhost:5000` (re-verified today) |
 | No secrets in bundle / source | **PASS** | JWT/db/keys absent; no `dangerouslySetInnerHTML` (React-escaped output) |
 
 ## Backend Verification
@@ -92,7 +95,7 @@ Version control: Git (monorepo frontend + backend + docs)
 | 404 behavior | **PASS** | unknown route → 404 JSON |
 | Production error masking | **PASS** | `NODE_ENV=production` → 5xx becomes "Internal server error" (no stack/paths) |
 | No debug routes | **PASS** | only `/api/health` plus registered API routers |
-| Deployed code version | **OPERATOR ACTION REQUIRED** | live register returns legacy message (`Registration is closed…`) → **redeploy backend from `abaa5b0`** |
+| Deployed code version | **OPERATOR ACTION REQUIRED** | live register returns legacy message (`Registration is closed…`) → **redeploy backend from `abaa5b0`/current `main` before admin provisioning** (final handoff step 2) |
 
 ## Database Verification
 
@@ -124,8 +127,8 @@ stored, 1h expiry, single-use (cleared on success); reset bumps `authVersion`
 | First user forced to `admin` | **PASS** | `auth.routes.js` register + harness |
 | Concurrency (unique lock) + permanent lock after success | **PASS** | `admin_bootstrap_locks`, phase-20.bootstrap (6 parallel → 1 created) |
 | Registration closed after bootstrap | **PASS** | code + tests |
-| Live register probe | **PASS** | probe `probe-verification@example.invalid` → 403, no user created |
-| Real first-admin provisioning complete | **OPERATOR ACTION REQUIRED** | probe admin still present; real admin must be provisioned per runbook after redeploy of `abaa5b0` |
+| Live register probe | **PASS** | read-only probe `ro-probe@example.invalid` → 403, no user created (legacy message on live build) |
+| Real first-admin provisioning complete | **OPERATOR ACTION REQUIRED** | probe admin must be removed first; then real admin is provisioned per runbook after the Phase-20 redeploy (final handoff steps 2→4→10) |
 
 ## RBAC
 
@@ -228,7 +231,8 @@ First real run will occur on the next push to `main`.
 
 ## Regression Tests
 
-All in-repo suites run fresh against `abaa5b0`:
+All in-repo suites run fresh against the verified commit `897c7d2`
+(offline suites re-run during final verification — still green):
 
 | Suite | Result |
 |---|---|
@@ -256,9 +260,10 @@ No suites skipped; no tests deleted or modified to hide results.
 
 ## Operator Actions Required
 
-1. **Redeploy the backend** so production runs `abaa5b0` (Phase 20). After
-   deploy, verify register returns the generic *"Registration is temporarily
-   unavailable."* 403.
+1. **Redeploy the backend** so production runs the current `main` (Phase 20,
+   commit `abaa5b0`+) — **BEFORE creating the real admin**. After deploy, verify
+   register returns the generic *"Registration is temporarily unavailable."* 403
+   (live evidence today still shows the legacy message).
 2. **Delete the inert Phase 19 probe admin `6a9bd536517cf52838416563`** via
    Atlas (safe procedure in `docs/PRODUCTION_RUNBOOK.md` §12; never via the API,
    never by app code).
@@ -279,6 +284,30 @@ operational — redeploy of the already-committed Phase 20 code, removal of an
 inert probe account, real-admin provisioning, backup/PITR confirmation, and
 optional integration configuration. None of the critical security blockers are
 present, so the website can launch now with the listed operator actions tracked.
+
+---
+
+## Final Operational Handoff — Sequence Status (live re-verification, 2026-09-05)
+
+Read-only re-verification against the **current deployment** (no users created,
+no data modified, no credentials accessed). **Key point: redeploy the Render
+backend to the Phase 20 commit BEFORE creating the real admin.**
+
+| Step | Action | Status | Live evidence |
+|---|---|---|---|
+| 1 | GitHub correct (`HEAD == origin/main`, clean) | **DONE** | `897c7d2`, clean tree |
+| 2 | Redeploy Render (Deploys → Manual Deploy → Deploy latest commit) | **OPERATOR ACTION REQUIRED** | live register still returns the **legacy** message → backend still on pre-Phase-20 code |
+| 3 | Verify new backend (health 200 + Phase-20 generic register 403) | **PARTIAL** | health `200 database:ok connected` (PASS); register probe → `403 "Registration is closed. Ask an existing admin to create your account."` (legacy; the Phase-20 "temporarily unavailable" message is **not** live yet) |
+| 4–6 | Atlas Data Explorer → `users` → find exact `6a9bd536517cf52838416563` → delete only that probe doc | **OPERATOR ACTION REQUIRED** | no Atlas access from here; safe procedure in `docs/PRODUCTION_RUNBOOK.md` §12 |
+| 7 | Confirm `users` count = 0 (stop if any other user) | **OPERATOR ACTION REQUIRED** | requires operator Atlas read access |
+| 8–9 | Set `ALLOW_ADMIN_BOOTSTRAP=true`, keep `ADMIN_BOOTSTRAP_EMAIL=saugatb40@gmail.com`, redeploy, wait Live | **OPERATOR ACTION REQUIRED** | password must come from the app flow, never env vars |
+| 10 | Register real admin `saugatb40@gmail.com` → 201, role ADMIN (forced by code) | **OPERATOR ACTION REQUIRED** | must happen **after** step 2 redeploy |
+| 11–12 | Set `ALLOW_ADMIN_BOOTSTRAP=false`, redeploy, verify register → 403 | **OPERATOR ACTION REQUIRED** | final state must be `ALLOW_ADMIN_BOOTSTRAP=false` |
+| 13–14 | Real-admin login; dashboard/inbox/users/logs/content/workflow/trash/settings; backend remains permission authority | **OPERATOR ACTION REQUIRED** | invalid-login probe → 401 (PASS); anon protected routes → 401 (PASS); real login pending |
+| 15 | Atlas backup/PITR enablement | **OPERATOR ACTION REQUIRED** | not observable from here; do not claim enabled unless confirmed in the Atlas UI |
+| 16–17 | SMTP after the core system; then forgot-password reset test | **DEFERRED** | no SMTP credentials; do not fabricate a delivery test |
+| 18 | Cloudinary / Facebook / AI live tests | **DEFERRED** | unconfigured in production |
+| 19 | Read-only final verification | **DONE** | evidence in the table below |
 
 ---
 
