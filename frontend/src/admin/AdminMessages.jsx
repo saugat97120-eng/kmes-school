@@ -16,7 +16,6 @@ function AdminMessages() {
   const [error, setError] = useState("");
 
   const load = () => {
-    setLoading(true);
     api
       .getMessages(tab)
       .then((data) => setMessages(data.data || []))
@@ -60,7 +59,10 @@ function AdminMessages() {
         {tabs.map((t) => (
           <button
             key={t.key}
-            onClick={() => setTab(t.key)}
+            onClick={() => {
+              setLoading(true);
+              setTab(t.key);
+            }}
             className={`px-4 py-2 text-sm font-semibold ${
               tab === t.key
                 ? "border-b-2 border-navy text-navy"

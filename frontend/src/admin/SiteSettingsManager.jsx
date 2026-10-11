@@ -58,28 +58,28 @@ function SiteSettingsManager() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const load = async () => {
-    try {
-      setLoading(true);
-      setError("");
-      const data = await api.getAll("site-settings");
-      const items = data.data || [];
+  const load = () => {
+    api
+      .getAll("site-settings")
+      .then(async (data) => {
+        const items = data.data || [];
+        if (!items.length) {
+          const created = await api.create("site-settings", defaultValues);
+          setId(created.data?._id || null);
+          setSettings({ ...defaultValues, ...(created.data || {}) });
+          return;
+        }
 
-      if (!items.length) {
-        const created = await api.create("site-settings", defaultValues);
-        setId(created.data?._id || null);
-        setSettings({ ...defaultValues, ...(created.data || {}) });
-        return;
-      }
-
-      const item = items[0];
-      setId(item._id);
-      setSettings({ ...defaultValues, ...item });
-    } catch (err) {
-      setError(err.message || "Unable to load site settings.");
-    } finally {
-      setLoading(false);
-    }
+        const item = items[0];
+        setId(item._id);
+        setSettings({ ...defaultValues, ...item });
+      })
+      .catch((err) => {
+        setError(err.message || "Unable to load site settings.");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   useEffect(() => {

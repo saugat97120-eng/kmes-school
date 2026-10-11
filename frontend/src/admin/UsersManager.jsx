@@ -14,7 +14,6 @@ function UsersManager() {
   const [form, setForm] = useState({ name: "", email: "", password: "", role: "editor" });
 
   const load = () => {
-    setLoading(true);
     api
       .getUsers()
       .then((data) => setUsers(data.data || []))

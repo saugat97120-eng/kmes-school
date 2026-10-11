@@ -1,5 +1,5 @@
 import { Phone, Mail, Share2 } from "lucide-react";
-import { useSiteSettings } from "../../context/SiteSettingsContext";
+import { useSiteSettings } from "../../context/useSiteSettings";
 
 function TopBar() {
   const { settings } = useSiteSettings();

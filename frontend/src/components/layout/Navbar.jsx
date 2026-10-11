@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { Menu, X, ChevronDown, ChevronRight } from "lucide-react";
-import { useSiteSettings } from "../../context/SiteSettingsContext";
+import { useSiteSettings } from "../../context/useSiteSettings";
 
 const navLinks = [
   { label: "Home", to: "/" },

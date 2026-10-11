@@ -1,7 +1,7 @@
 import Container from "../common/Container";
 import SectionHeading from "../common/SectionHeading";
 import { MapPin, Phone, Mail } from "lucide-react";
-import { useSiteSettings } from "../../context/SiteSettingsContext";
+import { useSiteSettings } from "../../context/useSiteSettings";
 
 function ContactSection() {
   const { settings } = useSiteSettings();

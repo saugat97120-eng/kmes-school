@@ -1,6 +1,6 @@
 import Container from "../common/Container";
 import Button from "../common/Button";
-import { useSiteSettings } from "../../context/SiteSettingsContext";
+import { useSiteSettings } from "../../context/useSiteSettings";
 
 function HeroSection() {
   const { settings } = useSiteSettings();

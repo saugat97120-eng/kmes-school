@@ -1,6 +1,6 @@
 import Container from "../common/Container";
 import SectionHeading from "../common/SectionHeading";
-import { useSiteSettings } from "../../context/SiteSettingsContext";
+import { useSiteSettings } from "../../context/useSiteSettings";
 
 function LeadershipSection() {
   const { settings } = useSiteSettings();

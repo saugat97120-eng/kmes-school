@@ -48,25 +48,27 @@ function PageContentManager() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const load = async () => {
-    try {
-      setLoading(true);
-      const data = await api.getAll("page-content");
-      const items = data.data || [];
-      setPages(items);
-      if (items.length) {
-        const first = items[0];
-        setSelectedId(first._id);
-        setForm({ ...pageDefaults, ...first });
-      } else {
-        setSelectedId(null);
-        setForm(pageDefaults);
-      }
-    } catch (err) {
-      setError(err.message || "Unable to load page content.");
-    } finally {
-      setLoading(false);
-    }
+  const load = () => {
+    api
+      .getAll("page-content")
+      .then((data) => {
+        const items = data.data || [];
+        setPages(items);
+        if (items.length) {
+          const first = items[0];
+          setSelectedId(first._id);
+          setForm({ ...pageDefaults, ...first });
+        } else {
+          setSelectedId(null);
+          setForm(pageDefaults);
+        }
+      })
+      .catch((err) => {
+        setError(err.message || "Unable to load page content.");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   useEffect(() => {

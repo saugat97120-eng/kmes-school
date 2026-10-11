@@ -37,7 +37,6 @@ function ActivityLogs() {
   const [pages, setPages] = useState(1);
 
   useEffect(() => {
-    setLoading(true);
     api
       .getActivityLogs({ page, limit: 30 })
       .then((data) => {
@@ -105,7 +104,10 @@ function ActivityLogs() {
           <div className="flex items-center justify-end gap-2 border-t border-gray-100 px-5 py-3 text-xs text-gray-500">
             <button
               disabled={page <= 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              onClick={() => {
+                setLoading(true);
+                setPage((p) => Math.max(1, p - 1));
+              }}
               className="rounded-md border border-gray-200 px-3 py-1.5 font-semibold disabled:opacity-40"
             >
               Prev
@@ -113,7 +115,10 @@ function ActivityLogs() {
             <span className="px-2 py-1.5">Page {page} of {pages}</span>
             <button
               disabled={page >= pages}
-              onClick={() => setPage((p) => Math.min(pages, p + 1))}
+              onClick={() => {
+                setLoading(true);
+                setPage((p) => Math.min(pages, p + 1));
+              }}
               className="rounded-md border border-gray-200 px-3 py-1.5 font-semibold disabled:opacity-40"
             >
               Next
