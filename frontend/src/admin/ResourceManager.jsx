@@ -463,6 +463,8 @@ function ResourceManager({ config }) {
 
                   {field.type === "textarea" && (
                     <textarea
+                      id={`resource-${field.name}`}
+                      name={field.name}
                       required={field.required}
                       rows={4}
                       value={form[field.name]}
@@ -473,6 +475,8 @@ function ResourceManager({ config }) {
 
                   {field.type === "text" && (
                     <input
+                      id={`resource-${field.name}`}
+                      name={field.name}
                       required={field.required}
                       type="text"
                       value={form[field.name]}
@@ -492,6 +496,8 @@ function ResourceManager({ config }) {
                       )}
                       {canUploadMedia() ? (
                         <input
+                          id={`resource-${field.name}-file`}
+                          name={`${field.name}-file`}
                           type="file"
                           accept="image/*"
                           onChange={(e) => handleImageUpload(field, e.target.files?.[0])}
@@ -503,6 +509,8 @@ function ResourceManager({ config }) {
                         </p>
                       )}
                       <input
+                        id={`resource-${field.name}`}
+                        name={field.name}
                         type="text"
                         value={form[field.name] || ""}
                         onChange={(e) => handleChange(field, e.target.value)}
@@ -514,6 +522,8 @@ function ResourceManager({ config }) {
 
                   {field.type === "date" && (
                     <input
+                      id={`resource-${field.name}`}
+                      name={field.name}
                       required={field.required}
                       type="date"
                       value={form[field.name]}
@@ -524,6 +534,8 @@ function ResourceManager({ config }) {
 
                   {field.type === "select" && (
                     <select
+                      id={`resource-${field.name}`}
+                      name={field.name}
                       value={form[field.name]}
                       onChange={(e) => handleChange(field, e.target.value)}
                       className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-navy"
@@ -538,6 +550,8 @@ function ResourceManager({ config }) {
                   {field.type === "checkbox" && (
                     <label className="flex items-center gap-2 text-sm text-gray-700">
                       <input
+                        id={`resource-${field.name}`}
+                        name={field.name}
                         type="checkbox"
                         checked={Boolean(form[field.name])}
                         onChange={(e) => handleChange(field, e.target.checked)}

@@ -140,6 +140,8 @@ function UsersManager() {
               <div>
                 <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">Name</label>
                 <input
+                  id="user-form-name"
+                  name="name"
                   required
                   type="text"
                   value={form.name}
@@ -150,6 +152,9 @@ function UsersManager() {
               <div>
                 <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">Email</label>
                 <input
+                  id="user-form-email"
+                  name="email"
+                  autoComplete="email"
                   required
                   type="email"
                   value={form.email}
@@ -160,6 +165,9 @@ function UsersManager() {
               <div>
                 <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">Password</label>
                 <input
+                  id="user-form-password"
+                  name="password"
+                  autoComplete="new-password"
                   required
                   minLength={6}
                   type="password"
@@ -171,6 +179,8 @@ function UsersManager() {
               <div>
                 <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">Role</label>
                 <select
+                  id="user-form-role"
+                  name="role"
                   value={form.role}
                   onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
                   className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-navy"

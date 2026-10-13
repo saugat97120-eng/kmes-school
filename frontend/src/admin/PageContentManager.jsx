@@ -180,6 +180,8 @@ function PageContentManager() {
 
                 {field.type === "textarea" ? (
                   <textarea
+                    id={`page-${field.name}`}
+                    name={field.name}
                     value={form[field.name] ?? ""}
                     onChange={(e) => handleChange(field.name, e.target.value)}
                     rows={4}
@@ -188,6 +190,8 @@ function PageContentManager() {
                 ) : field.type === "checkbox" ? (
                   <label className="flex items-center gap-2 text-sm text-gray-700">
                     <input
+                      id={`page-${field.name}`}
+                      name={field.name}
                       type="checkbox"
                       checked={Boolean(form[field.name])}
                       onChange={(e) => handleChange(field.name, e.target.checked)}
@@ -205,12 +209,16 @@ function PageContentManager() {
                       </div>
                     )}
                     <input
+                      id={`page-${field.name}-file`}
+                      name={`${field.name}-file`}
                       type="file"
                       accept="image/*"
                       onChange={(e) => handleImageUpload(field.name, e.target.files?.[0])}
                       className="block w-full text-sm text-gray-500 file:mr-3 file:rounded-md file:border-0 file:bg-navy file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white"
                     />
                     <input
+                      id={`page-${field.name}`}
+                      name={field.name}
                       type="text"
                       value={form[field.name] ?? ""}
                       onChange={(e) => handleChange(field.name, e.target.value)}
@@ -220,6 +228,8 @@ function PageContentManager() {
                   </div>
                 ) : (
                   <input
+                    id={`page-${field.name}`}
+                    name={field.name}
                     type="text"
                     value={form[field.name] ?? ""}
                     onChange={(e) => handleChange(field.name, e.target.value)}

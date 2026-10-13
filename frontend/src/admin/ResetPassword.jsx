@@ -92,7 +92,10 @@ function ResetPassword() {
           <form onSubmit={handleReset} className="mt-8 space-y-4">
             <div>
               <input
+                id="reset-password"
+                name="password"
                 type="password"
+                autoComplete="new-password"
                 required
                 minLength={6}
                 placeholder="New Password (min 6 chars)"
@@ -104,7 +107,10 @@ function ResetPassword() {
 
             <div>
               <input
+                id="reset-confirm-password"
+                name="confirmPassword"
                 type="password"
+                autoComplete="new-password"
                 required
                 minLength={6}
                 placeholder="Confirm New Password"

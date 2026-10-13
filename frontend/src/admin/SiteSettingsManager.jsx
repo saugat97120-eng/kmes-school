@@ -181,6 +181,8 @@ function SiteSettingsManager() {
 
               {field.type === "textarea" ? (
                 <textarea
+                  id={`setting-${field.name}`}
+                  name={field.name}
                   value={settings[field.name] ?? ""}
                   onChange={(e) => handleChange(field.name, e.target.value)}
                   rows={4}
@@ -196,12 +198,16 @@ function SiteSettingsManager() {
                     </div>
                   )}
                   <input
+                    id={`setting-${field.name}-file`}
+                    name={`${field.name}-file`}
                     type="file"
                     accept="image/*"
                     onChange={(e) => handleImageUpload(field.name, e.target.files?.[0])}
                     className="block w-full text-sm text-gray-500 file:mr-3 file:rounded-md file:border-0 file:bg-navy file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white"
                   />
                   <input
+                    id={`setting-${field.name}`}
+                    name={field.name}
                     type="text"
                     value={settings[field.name] ?? ""}
                     onChange={(e) => handleChange(field.name, e.target.value)}
@@ -211,6 +217,8 @@ function SiteSettingsManager() {
                 </div>
               ) : (
                 <input
+                  id={`setting-${field.name}`}
+                  name={field.name}
                   type="text"
                   value={settings[field.name] ?? ""}
                   onChange={(e) => handleChange(field.name, e.target.value)}

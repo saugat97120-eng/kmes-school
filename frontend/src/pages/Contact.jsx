@@ -85,6 +85,7 @@ function Contact() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <h3 className="font-serif text-xl font-bold text-navy">Send Message</h3>
               <input
+                id="contact-name"
                 required
                 name="name"
                 value={form.name}
@@ -93,6 +94,7 @@ function Contact() {
                 className="w-full rounded-md border border-gray-300 px-4 py-3 text-sm outline-none focus:border-navy"
               />
               <input
+                id="contact-email"
                 required
                 type="email"
                 name="email"
@@ -102,6 +104,7 @@ function Contact() {
                 className="w-full rounded-md border border-gray-300 px-4 py-3 text-sm outline-none focus:border-navy"
               />
               <input
+                id="contact-phone"
                 name="phone"
                 value={form.phone}
                 onChange={handleChange}
@@ -109,6 +112,7 @@ function Contact() {
                 className="w-full rounded-md border border-gray-300 px-4 py-3 text-sm outline-none focus:border-navy"
               />
               <input
+                id="contact-subject"
                 required
                 name="subject"
                 value={form.subject}
@@ -117,6 +121,7 @@ function Contact() {
                 className="w-full rounded-md border border-gray-300 px-4 py-3 text-sm outline-none focus:border-navy"
               />
               <textarea
+                id="contact-message"
                 required
                 name="message"
                 value={form.message}
