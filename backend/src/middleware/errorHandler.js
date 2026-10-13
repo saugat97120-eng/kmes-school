@@ -21,6 +21,13 @@ export function errorHandler(err, req, res, next) {
     });
   }
 
+  if (err.name === "CastError") {
+    return res.status(400).json({
+      success: false,
+      message: `Invalid ${err.path || "resource ID"} format`,
+    });
+  }
+
   const status = err.statusCode || 500;
   // Never leak raw error details (filesystem paths, DB connection strings,
   // provider URLs) to API clients in production. Detailed diagnostics may
