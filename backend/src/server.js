@@ -69,10 +69,8 @@ app.use(
     origin(origin, callback) {
       const allowed = env.allowedOrigins;
       // Allow non-browser / same-origin / curl requests (no Origin header) and
-      // any explicitly approved origin. For any other origin, deny by omitting
-      // the Access-Control-Allow-Origin header so the browser blocks the
-      // request (the request is NOT served with CORS headers).
-      if (!origin || allowed.includes(origin)) {
+      const isKmesVercel = /^https:\/\/kmes-school.*\.vercel\.app$/.test(origin);
+      if (!origin || allowed.includes(origin) || isKmesVercel) {
         return callback(null, true);
       }
       return callback(null, false);
