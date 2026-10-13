@@ -21,6 +21,7 @@ import facilityRoutes from "./routes/facilities.routes.js";
 import activityRoutes from "./routes/activities.routes.js";
 import contactRoutes from "./routes/contact.routes.js";
 import siteSettingsRoutes from "./routes/siteSettings.routes.js";
+import leadershipRoutes from "./routes/leadership.routes.js";
 import pageContentRoutes from "./routes/pageContent.routes.js";
 import uploadRoutes from "./routes/upload.routes.js";
 import attachmentsRoutes from "./routes/attachments.routes.js";
@@ -59,7 +60,12 @@ if (isProduction()) {
 // never delivering real email).
 assertEmailProviderConfiguration();
 
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
 // CORS: explicit allow-list of frontend origins (no wildcard). Each environment
 // (dev/staging/prod) supplies only the origins it is allowed to serve. When the
 // list has exactly one origin it is equivalent to the previous single-origin
@@ -121,6 +127,7 @@ app.use("/api/facilities", facilityRoutes);
 app.use("/api/activities", activityRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/site-settings", siteSettingsRoutes);
+app.use("/api/leadership", leadershipRoutes);
 app.use("/api/page-content", pageContentRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/attachments", attachmentsRoutes);

@@ -126,6 +126,9 @@ export const api = {
     request(`/api/${resource}/${id}/unpublish`, { method: "POST" }),
 
   getPage: (slug) => request(`/api/page-content?slug=${encodeURIComponent(slug)}`),
+  getLeadership: () => request("/api/leadership"),
+  updateLeadership: (payload) =>
+    request("/api/leadership", { method: "PUT", body: JSON.stringify(payload) }),
 
   getMessages: (status) => request(`/api/contact${qs({ status })}`),
   updateMessage: (id, payload) =>

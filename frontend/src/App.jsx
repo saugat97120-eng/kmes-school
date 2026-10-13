@@ -27,6 +27,7 @@ import ProtectedRoute from "./admin/ProtectedRoute";
 import AdminDashboard from "./admin/AdminDashboard";
 import AdminMessages from "./admin/AdminMessages";
 import SiteSettingsManager from "./admin/SiteSettingsManager";
+import LeadershipManager from "./admin/LeadershipManager";
 import PageContentManager from "./admin/PageContentManager";
 import ResourceManager from "./admin/ResourceManager";
 import ReviewQueue from "./admin/ReviewQueue";
@@ -74,6 +75,14 @@ function App() {
               element={
                 <PermissionRoute permission={PERMISSIONS.SETTINGS_EDIT}>
                   <SiteSettingsManager />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="leadership"
+              element={
+                <PermissionRoute permission={PERMISSIONS.SETTINGS_EDIT}>
+                  <LeadershipManager />
                 </PermissionRoute>
               }
             />

@@ -17,7 +17,7 @@ import { pathToFileURL } from "node:url";
 import { createRequire } from "node:module";
 import { MongoMemoryServer } from "mongodb-memory-server";
 
-const BACKEND_DIR = "C:\\Users\\Dell\\Downloads\\kmes-school-website-updated (2)\\kmes-school\\backend";
+const BACKEND_DIR = path.resolve(import.meta.dirname, "..");
 const require = createRequire(pathToFileURL(path.join(BACKEND_DIR, "package.json")).href);
 const mongoose = require("mongoose");
 
@@ -254,7 +254,52 @@ check("smtp-failure: still generic 200", fpEd.status === 200 && /registered/i.te
 check("smtp-failure: no delivery attempted via mock", emailMock._count() === before, `count=${emailMock._count()} before=${before}`);
 const editorDoc = await User.findOne({ email: "editor@kmes.test" });
 check("smtp-failure: reset record still created (stored hash)", typeof editorDoc.passwordResetTokenHash === "string" && /^[0-9a-f]{64}$/.test(editorDoc.passwordResetTokenHash));
-emailSvc.setEmailProviderConfig({ provider: "mock" });
+// ---------- G. LEADERSHIP MANAGEMENT ----------
+console.log("\n=== LEADERSHIP MANAGEMENT ===");
+const lPublic = await req("GET", "/api/leadership");
+check("leadership: public GET is 200", lPublic.status === 200 && lPublic.data.success === true, `status=${lPublic.status}`);
+check("leadership: has principal profile", Boolean(lPublic.data.data?.principal), "no principal");
+check("leadership: has director profile", Boolean(lPublic.data.data?.director), "no director");
+
+const lNoAuth = await req("PUT", "/api/leadership", { body: { principal: { name: "Test" } } });
+check("leadership: unauthenticated PUT is 401", lNoAuth.status === 401, `status=${lNoAuth.status}`);
+
+const lBadUrl = await req("PUT", "/api/leadership", {
+  token: newLogin.data.token,
+  body: { principal: { photoUrl: "javascript:alert(1)" } },
+});
+check("leadership: javascript: photoUrl rejected (400)", lBadUrl.status === 400, `status=${lBadUrl.status}`);
+
+const lUpdate = await req("PUT", "/api/leadership", {
+  token: newLogin.data.token,
+  body: {
+    principal: {
+      name: "Updated Principal Name",
+      designation: "Headmaster",
+      message: "A modern education for tomorrow.",
+      photoUrl: "https://example.com/principal.jpg",
+    },
+    director: {
+      name: "Updated Director Name",
+      designation: "Managing Director",
+      message: "Committed to community service.",
+      photoUrl: "https://example.com/director.jpg",
+    },
+  },
+});
+check("leadership: authorized PUT is 200", lUpdate.status === 200 && lUpdate.data.success === true, `status=${lUpdate.status}`);
+check("leadership: updated principal reflected", lUpdate.data.data?.principal?.name === "Updated Principal Name");
+check("leadership: updated principal photoUrl", lUpdate.data.data?.principal?.photoUrl === "https://example.com/principal.jpg");
+
+const lPublicAfter = await req("GET", "/api/leadership");
+check("leadership: public GET reflects changes", lPublicAfter.data.data?.principal?.name === "Updated Principal Name");
+
+// Remove photo test
+const lRemovePhoto = await req("PUT", "/api/leadership", {
+  token: newLogin.data.token,
+  body: { principal: { photoUrl: "" } },
+});
+check("leadership: photo remove leaves empty string", lRemovePhoto.data.data?.principal?.photoUrl === "");
 
 // ---------- RESTORE ----------
 await mongoServer.stop();

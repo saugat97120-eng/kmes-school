@@ -70,7 +70,10 @@ function AdminLogin() {
         {isForgot ? (
           <form onSubmit={handleForgotPassword} className="mt-8 space-y-4">
             <input
+              id="forgot-email"
+              name="email"
               type="email"
+              autoComplete="email"
               required
               placeholder="Admin Email"
               value={email}
@@ -111,7 +114,10 @@ function AdminLogin() {
         ) : (
           <form onSubmit={handleLogin} className="mt-8 space-y-4">
             <input
+              id="admin-email"
+              name="email"
               type="email"
+              autoComplete="username"
               required
               placeholder="Email"
               value={email}
@@ -119,7 +125,10 @@ function AdminLogin() {
               className="w-full rounded-md border border-gray-300 px-4 py-3 text-sm outline-none focus:border-navy"
             />
             <input
+              id="admin-password"
+              name="password"
               type="password"
+              autoComplete="current-password"
               required
               placeholder="Password"
               value={password}

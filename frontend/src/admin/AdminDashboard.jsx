@@ -12,6 +12,7 @@ import {
   Upload,
   FileText,
   Clock,
+  Users,
 } from "lucide-react";
 import { api } from "./api";
 
@@ -27,6 +28,7 @@ const contentCards = [
 const quickActions = [
   { label: "New Notice", to: "/admin/notices", icon: Plus },
   { label: "New Event", to: "/admin/events", icon: Plus },
+  { label: "Leadership", to: "/admin/leadership", icon: Users },
   { label: "Upload Photos", to: "/admin/media", icon: Upload },
   { label: "Edit Pages", to: "/admin/pages", icon: FileText },
 ];

@@ -41,6 +41,7 @@ const groups = [
     label: "Website",
     links: [
       { to: "/admin/pages", label: "Pages", icon: FileText, permission: PERMISSIONS.PAGES_VIEW },
+      { to: "/admin/leadership", label: "Leadership", icon: Users, permission: PERMISSIONS.SETTINGS_VIEW },
       { to: "/admin/site-settings", label: "Site Settings", icon: Settings, permission: PERMISSIONS.SETTINGS_VIEW },
     ],
   },
