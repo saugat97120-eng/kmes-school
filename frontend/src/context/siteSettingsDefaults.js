@@ -24,4 +24,8 @@ export const siteSettingsDefaults = {
   directorPhoto: "",
   directorMessage:
     "We believe meaningful education blends academic excellence with discipline, creativity, and community spirit to prepare students for the future.",
+  establishedYear: "2059 B.S.",
+  workingHours: "Sunday - Friday: 9:00 AM - 4:00 PM",
+  academicSession: "2081/2082",
+  admissionsStatus: "Open for Nursery to Grade 10",
 };

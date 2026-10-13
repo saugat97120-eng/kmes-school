@@ -28,6 +28,10 @@ const SETTINGS_STRING_FIELDS = [
   "directorTitle",
   "directorPhoto",
   "directorMessage",
+  "establishedYear",
+  "workingHours",
+  "academicSession",
+  "admissionsStatus",
 ];
 
 const SETTINGS_URL_FIELDS = new Set([

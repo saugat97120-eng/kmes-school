@@ -41,6 +41,10 @@ const siteSettingsSchema = new mongoose.Schema(
       default:
         "We believe meaningful education blends academic excellence with discipline, creativity, and community spirit to prepare students for the future.",
     },
+    establishedYear: { type: String, default: "2059 B.S." },
+    workingHours: { type: String, default: "Sunday - Friday: 9:00 AM - 4:00 PM" },
+    academicSession: { type: String, default: "2081/2082" },
+    admissionsStatus: { type: String, default: "Open for Nursery to Grade 10" },
     published: { type: Boolean, default: true },
   },
   { timestamps: true }

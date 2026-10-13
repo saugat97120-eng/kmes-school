@@ -1,8 +1,14 @@
 import Container from "../common/Container";
 import SectionHeading from "../common/SectionHeading";
 import Button from "../common/Button";
+import { useSiteSettings } from "../../context/useSiteSettings";
 
 function AboutSection() {
+  const { settings } = useSiteSettings();
+  const schoolName = settings.schoolName || "Kaseni Model English School";
+  const establishedYear = settings.establishedYear || "2059 B.S.";
+  const description = `${schoolName} was established in ${establishedYear} according to the school's official seal. Additional historical information will be published after confirmation from the school administration.`;
+
   return (
     <section className="py-20">
       <Container>
@@ -11,7 +17,7 @@ function AboutSection() {
             <SectionHeading
               eyebrow="About Our School"
               title="A Trusted Name in Quality Education"
-              description="Kaseni Model English School was established in 2059 B.S. according to the school's official seal. Additional historical information will be published after confirmation from the school administration."
+              description={description}
             />
             <div className="mt-6">
               <Button to="/about" variant="outline" showArrow>

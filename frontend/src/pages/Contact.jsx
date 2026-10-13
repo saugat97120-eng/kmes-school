@@ -2,11 +2,13 @@ import { useState } from "react";
 import PageHeader from "../components/common/PageHeader";
 import Container from "../components/common/Container";
 import Button from "../components/common/Button";
-import { MapPin, Phone, Mail, Share2 } from "lucide-react";
+import { MapPin, Phone, Mail, Share2, Clock } from "lucide-react";
+import { useSiteSettings } from "../context/useSiteSettings";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 function Contact() {
+  const { settings } = useSiteSettings();
   const [form, setForm] = useState({ name: "", email: "", phone: "", subject: "", message: "" });
   const [status, setStatus] = useState("idle"); // idle | sending | sent | error
 
@@ -39,10 +41,36 @@ function Contact() {
             <div>
               <h3 className="font-serif text-xl font-bold text-navy">School Information</h3>
               <div className="mt-6 flex flex-col gap-4 text-sm text-gray-600">
-                <span className="flex items-center gap-3"><MapPin size={18} className="text-gold" /> Kaseni, Nepal</span>
-                <span className="flex items-center gap-3"><Phone size={18} className="text-gold" /> +977-9817361024</span>
-                <span className="flex items-center gap-3"><Mail size={18} className="text-gold" /> kmesbelbari@gmail.com</span>
-                <span className="flex items-center gap-3"><Share2 size={18} className="text-gold" /> https://www.facebook.com/61554117025008</span>
+                {settings.address && (
+                  <span className="flex items-center gap-3">
+                    <MapPin size={18} className="text-gold shrink-0" /> {settings.address}
+                  </span>
+                )}
+                {settings.phone && (
+                  <span className="flex items-center gap-3">
+                    <Phone size={18} className="text-gold shrink-0" /> {settings.phone}
+                  </span>
+                )}
+                {settings.email && (
+                  <span className="flex items-center gap-3">
+                    <Mail size={18} className="text-gold shrink-0" /> {settings.email}
+                  </span>
+                )}
+                {settings.workingHours && (
+                  <span className="flex items-center gap-3">
+                    <Clock size={18} className="text-gold shrink-0" /> {settings.workingHours}
+                  </span>
+                )}
+                {settings.facebookUrl && (
+                  <a
+                    href={settings.facebookUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-3 hover:text-gold"
+                  >
+                    <Share2 size={18} className="text-gold shrink-0" /> Facebook Page
+                  </a>
+                )}
               </div>
               <div className="mt-8 aspect-video overflow-hidden rounded-2xl bg-gray-100">
                 <iframe

@@ -26,14 +26,22 @@ const defaultValues = {
   directorPhoto: "",
   directorMessage:
     "We believe meaningful education blends academic excellence with discipline, creativity, and community spirit to prepare students for the future.",
+  establishedYear: "2059 B.S.",
+  workingHours: "Sunday - Friday: 9:00 AM - 4:00 PM",
+  academicSession: "2081/2082",
+  admissionsStatus: "Open for Nursery to Grade 10",
 };
 
 const fields = [
   { name: "schoolName", label: "School Name", type: "text" },
   { name: "shortName", label: "Short Name / Brand", type: "text" },
+  { name: "establishedYear", label: "Establishment Year / Date (e.g. 2059 B.S.)", type: "text" },
+  { name: "academicSession", label: "Current Academic Session (e.g. 2081/2082)", type: "text" },
+  { name: "admissionsStatus", label: "Admissions Status (e.g. Open for Nursery to Grade 10)", type: "text" },
+  { name: "workingHours", label: "Working / School Hours", type: "text" },
   { name: "logoUrl", label: "Header Logo URL", type: "imageUpload" },
   { name: "heroImage", label: "Hero Background Image URL", type: "imageUpload" },
-  { name: "heroEyebrow", label: "Hero Eyebrow", type: "text" },
+  { name: "heroEyebrow", label: "Hero Eyebrow (e.g. Est. 2059 B.S.)", type: "text" },
   { name: "heroTitle", label: "Hero Title", type: "text" },
   { name: "heroDescription", label: "Hero Description", type: "textarea" },
   { name: "footerDescription", label: "Footer Description", type: "textarea" },

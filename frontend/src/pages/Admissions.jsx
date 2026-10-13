@@ -2,19 +2,21 @@ import { useEffect, useState } from "react";
 import PageHeader from "../components/common/PageHeader";
 import Container from "../components/common/Container";
 import Button from "../components/common/Button";
+import { useSiteSettings } from "../context/useSiteSettings";
+import { Calendar, CheckCircle2 } from "lucide-react";
 
 const defaultPage = {
   slug: "admissions",
   title: "Admissions",
   eyebrow: "Admissions",
   description: "Admission information and next steps for families joining KMES.",
-  admissionsIntro:
-    "For current admission availability and information, please contact Kaseni Model Secondary English School.",
+  admissionsIntro: "",
   admissionsCtaText: "Contact for Admission",
   admissionsCtaLink: "/contact",
 };
 
 function Admissions() {
+  const { settings } = useSiteSettings();
   const [page, setPage] = useState(defaultPage);
 
   useEffect(() => {
@@ -33,6 +35,9 @@ function Admissions() {
     loadPage();
   }, []);
 
+  const schoolName = settings.schoolName || "Kaseni Model Secondary English School";
+  const defaultIntro = `For current admission availability and information, please contact ${schoolName}.`;
+
   return (
     <div>
       <PageHeader
@@ -42,22 +47,49 @@ function Admissions() {
       />
       <section className="py-24 text-center">
         <Container className="max-w-2xl">
+          {(settings.academicSession || settings.admissionsStatus) && (
+            <div className="mb-8 grid gap-4 sm:grid-cols-2 text-left">
+              {settings.academicSession && (
+                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-navy">
+                    <Calendar size={16} className="text-gold" /> Academic Session
+                  </div>
+                  <p className="mt-1 font-serif text-lg font-bold text-navy">
+                    {settings.academicSession}
+                  </p>
+                </div>
+              )}
+              {settings.admissionsStatus && (
+                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-navy">
+                    <CheckCircle2 size={16} className="text-gold" /> Admission Status
+                  </div>
+                  <p className="mt-1 font-serif text-lg font-bold text-navy">
+                    {settings.admissionsStatus}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
           <h2 className="font-serif text-2xl font-bold text-navy">Interested in admission?</h2>
           <p className="mt-4 leading-7 text-gray-600">
-            {page.admissionsIntro || defaultPage.admissionsIntro}
+            {page.admissionsIntro || defaultIntro}
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <Button to={page.admissionsCtaLink || "/contact"} variant="gold" showArrow>
               {page.admissionsCtaText || defaultPage.admissionsCtaText}
             </Button>
-            <a
-              href="https://www.facebook.com/61554117025008"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center justify-center gap-2 rounded-md border border-navy px-6 py-3 font-semibold text-navy transition hover:bg-navy hover:text-white"
-            >
-              Message on Facebook
-            </a>
+            {settings.facebookUrl && (
+              <a
+                href={settings.facebookUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center gap-2 rounded-md border border-navy px-6 py-3 font-semibold text-navy transition hover:bg-navy hover:text-white"
+              >
+                Message on Facebook
+              </a>
+            )}
           </div>
         </Container>
       </section>

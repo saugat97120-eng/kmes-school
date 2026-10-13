@@ -1,14 +1,17 @@
 import Container from "../common/Container";
-import { GraduationCap, Users, BookOpen, Building2 } from "lucide-react";
-
-const facts = [
-  { icon: GraduationCap, label: "Grade Range", value: "Nursery – Grade 10" },
-  { icon: BookOpen, label: "Medium", value: "English" },
-  { icon: Users, label: "Type", value: "Co-educational" },
-  { icon: Building2, label: "Attendance", value: "Day Scholars" },
-];
+import { GraduationCap, BookOpen, Award, Calendar } from "lucide-react";
+import { useSiteSettings } from "../../context/useSiteSettings";
 
 function QuickFacts() {
+  const { settings } = useSiteSettings();
+
+  const facts = [
+    { icon: GraduationCap, label: "Grade Range", value: "Nursery – Grade 10" },
+    { icon: BookOpen, label: "Medium", value: "English" },
+    { icon: Award, label: "Established", value: settings.establishedYear || "2059 B.S." },
+    { icon: Calendar, label: "Session", value: settings.academicSession || "2081/2082" },
+  ];
+
   return (
     <section className="border-b border-gray-100 py-14">
       <Container>

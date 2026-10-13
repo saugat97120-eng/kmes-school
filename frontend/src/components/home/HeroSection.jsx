@@ -15,7 +15,7 @@ function HeroSection() {
       />
       <Container className="relative">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-gold">
-          {settings.heroEyebrow}
+          {settings.heroEyebrow || (settings.establishedYear ? `Est. ${settings.establishedYear}` : "Est. 2059 B.S.")}
         </p>
         <h1 className="mt-4 max-w-3xl font-serif text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl">
           {settings.heroTitle}
