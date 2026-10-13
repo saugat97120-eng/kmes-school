@@ -21,6 +21,7 @@ import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 
 import AdminLogin from "./admin/AdminLogin";
+import ResetPassword from "./admin/ResetPassword";
 import AdminLayout from "./admin/AdminLayout";
 import ProtectedRoute from "./admin/ProtectedRoute";
 import AdminDashboard from "./admin/AdminDashboard";
@@ -57,6 +58,8 @@ function App() {
         <Routes>
           {/* Admin routes: separate layout, no public navbar/footer */}
           <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/admin/reset-password" element={<ResetPassword />} />
           <Route
             path="/admin"
             element={
