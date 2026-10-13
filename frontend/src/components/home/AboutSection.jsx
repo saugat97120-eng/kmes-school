@@ -21,7 +21,7 @@ function AboutSection() {
           </div>
           <div className="aspect-[4/3] overflow-hidden rounded-2xl bg-gray-100">
             <img
-              src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=900&q=80"
+              src="https://images.unsplash.com/photo-1509062522246-3755977927d7?w=900&q=80"
               alt="School campus"
               className="h-full w-full object-cover"
             />

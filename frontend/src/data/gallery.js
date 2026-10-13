@@ -7,7 +7,7 @@ const gallery = [
   },
   {
     id: "demo-2",
-    src: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&q=80",
+    src: "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&q=80",
     title: "Classroom Activity",
     category: "Campus",
   },
