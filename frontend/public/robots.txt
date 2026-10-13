@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /admin
+Disallow: /admin/
+Disallow: /reset-password
+Allow: /
+
+Sitemap: https://kmes-school-xi.vercel.app/sitemap.xml
