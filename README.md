@@ -18,6 +18,7 @@ kmes-school/
 │   └── dist/                 # Production-optimized static output
 ├── backup/                   # Point-in-time JSON database snapshots
 └── docs/                     # Operations, integrations, and deployment documentation
+    ├── DOMAIN_SETUP_GUIDE.md          # Custom domain setup guide (Mercantile, Cloudflare, Vercel, Render)
     ├── FACEBOOK_INTEGRATION_GUIDE.md  # Complete Meta Graph API Page integration & publishing guide
     ├── DEPLOYMENT.md                  # Vercel & Render production operations guide
     ├── PRODUCTION_RUNBOOK.md          # Operator maintenance & daily procedures

@@ -34,6 +34,13 @@ import facebookRoutes from "./integrations/facebook/facebook.routes.js";
 import aiRoutes from "./integrations/ai/ai.routes.js";
 
 const VERCEL_PREVIEW_ORIGIN = /^https:\/\/kmes-school(-[a-z0-9]+)*\.vercel\.app$/;
+const KMES_CUSTOM_DOMAINS = new Set([
+  "https://kmes.com.np",
+  "https://www.kmes.com.np",
+  "http://kmes.com.np",
+  "http://www.kmes.com.np",
+]);
+
 
 const app = express();
 const PORT = env.port;
@@ -80,8 +87,8 @@ app.use(
   cors({
     origin(origin, callback) {
       const allowed = env.allowedOrigins;
-      // Allow non-browser / same-origin / curl requests (no Origin header).
-      if (!origin || allowed.includes(origin)) {
+      // Allow non-browser / same-origin / curl requests (no Origin header) or configured/custom origins.
+      if (!origin || allowed.includes(origin) || KMES_CUSTOM_DOMAINS.has(origin)) {
         return callback(null, true);
       }
       // Vercel preview deployments (kmes-school-<hash>-<team>.vercel.app).
