@@ -7,8 +7,6 @@ import {
   AlertCircle,
   Eye,
   RefreshCw,
-  User,
-  ExternalLink,
 } from "lucide-react";
 import { api, canUploadMedia } from "./api";
 import { useSiteSettings } from "../context/useSiteSettings";
@@ -202,49 +200,53 @@ function LeadershipManager() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const loadData = async () => {
-    setError("");
-    try {
-      const res = await api.getLeadership();
-      if (res?.success && res.data) {
-        setLeadership({
-          principal: {
-            ...DEFAULT_LEADERSHIP.principal,
-            ...(res.data.principal || {}),
-          },
-          director: {
-            ...DEFAULT_LEADERSHIP.director,
-            ...(res.data.director || {}),
-          },
-        });
-      }
-    } catch (err) {
-      // Fallback to site settings if leadership endpoint not yet deployed
-      try {
-        const fallbackRes = await api.getAll("site-settings");
-        const item = fallbackRes?.data?.[0];
-        if (item) {
+  const loadData = () => {
+    api
+      .getLeadership()
+      .then((res) => {
+        if (res?.success && res.data) {
           setLeadership({
             principal: {
-              name: item.principalName || DEFAULT_LEADERSHIP.principal.name,
-              designation: item.principalTitle || DEFAULT_LEADERSHIP.principal.designation,
-              message: item.principalMessage || DEFAULT_LEADERSHIP.principal.message,
-              photoUrl: item.principalPhoto || "",
+              ...DEFAULT_LEADERSHIP.principal,
+              ...(res.data.principal || {}),
             },
             director: {
-              name: item.directorName || DEFAULT_LEADERSHIP.director.name,
-              designation: item.directorTitle || DEFAULT_LEADERSHIP.director.designation,
-              message: item.directorMessage || DEFAULT_LEADERSHIP.director.message,
-              photoUrl: item.directorPhoto || "",
+              ...DEFAULT_LEADERSHIP.director,
+              ...(res.data.director || {}),
             },
           });
         }
-      } catch (fbErr) {
-        setError(err.message || "Failed to load leadership profiles.");
-      }
-    } finally {
-      setLoading(false);
-    }
+      })
+      .catch((err) => {
+        // Fallback to site settings if leadership endpoint not yet deployed
+        return api
+          .getAll("site-settings")
+          .then((fallbackRes) => {
+            const item = fallbackRes?.data?.[0];
+            if (item) {
+              setLeadership({
+                principal: {
+                  name: item.principalName || DEFAULT_LEADERSHIP.principal.name,
+                  designation: item.principalTitle || DEFAULT_LEADERSHIP.principal.designation,
+                  message: item.principalMessage || DEFAULT_LEADERSHIP.principal.message,
+                  photoUrl: item.principalPhoto || "",
+                },
+                director: {
+                  name: item.directorName || DEFAULT_LEADERSHIP.director.name,
+                  designation: item.directorTitle || DEFAULT_LEADERSHIP.director.designation,
+                  message: item.directorMessage || DEFAULT_LEADERSHIP.director.message,
+                  photoUrl: item.directorPhoto || "",
+                },
+              });
+            }
+          })
+          .catch(() => {
+            setError(err.message || "Failed to load leadership profiles.");
+          });
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   useEffect(() => {
