@@ -2,22 +2,54 @@
 // accounts and missing images in the database configured by MONGODB_URI.
 // It never writes. Usage:  node scripts/audit-content.mjs
 import "../src/config/loadEnv.js";
+import fs from "fs";
+import path from "path";
 import mongoose from "mongoose";
-
-const uri = process.env.MONGODB_URI;
-if (!uri) {
-  console.error("MONGODB_URI is not set.");
-  process.exit(1);
-}
 
 const PLACEHOLDER = /x{4,}|to be (confirmed|announced)|coming soon|lorem ipsum|^\s*(tbc|tba)\s*$/i;
 const TEST_EMAIL = /(^|[._+-])(test|demo|sample|phase\d*)([._+-]|@)/i;
 const findings = [];
 const add = (area, msg) => findings.push({ area, msg });
 
-await mongoose.connect(uri, { serverSelectionTimeoutMS: 10000 });
-const db = mongoose.connection.db;
-const all = async (name) => db.collection(name).find({}).sort({ createdAt: -1 }).toArray();
+let all;
+let connected = false;
+
+const uri = process.env.MONGODB_URI;
+if (uri && !process.argv.includes("--backup")) {
+  try {
+    await mongoose.connect(uri, { serverSelectionTimeoutMS: 5000 });
+    connected = true;
+    const db = mongoose.connection.db;
+    all = async (name) => db.collection(name).find({}).sort({ createdAt: -1 }).toArray();
+    console.log("Connected to MongoDB for audit.");
+  } catch (err) {
+    console.warn(`Could not connect to MongoDB (${err.message}). Falling back to local backup snapshot...`);
+  }
+}
+
+if (!connected) {
+  const backupRoot = path.resolve("..", "backup");
+  let backupDir = null;
+  if (fs.existsSync(backupRoot)) {
+    const subdirs = fs.readdirSync(backupRoot)
+      .filter((f) => fs.statSync(path.join(backupRoot, f)).isDirectory() && f.startsWith("backup-"))
+      .sort()
+      .reverse();
+    if (subdirs.length) backupDir = path.join(backupRoot, subdirs[0]);
+  }
+
+  if (!backupDir || !fs.existsSync(backupDir)) {
+    console.error("No MongoDB connection and no backup snapshot found in ../backup.");
+    process.exit(1);
+  }
+
+  console.log(`Auditing offline snapshot from: ${backupDir}`);
+  all = async (name) => {
+    const p = path.join(backupDir, `${name}.json`);
+    return fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : [];
+  };
+}
+
 const scan = (obj) => Object.entries(obj).filter(([, v]) => typeof v === "string" && PLACEHOLDER.test(v));
 
 const settings = await all("sitesettings");
@@ -43,4 +75,4 @@ else {
   console.log(`${findings.length} item(s) need attention:\n`);
   for (const f of findings) console.log(`[${f.area}] ${f.msg}`);
 }
-await mongoose.disconnect();
+if (connected) await mongoose.disconnect();
