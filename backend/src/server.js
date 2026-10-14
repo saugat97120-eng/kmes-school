@@ -131,6 +131,16 @@ app.use(
   })
 );
 
+// Root service endpoint for cloud load balancers and PaaS health checkers (Render, etc.)
+app.get("/", (req, res) => {
+  res.status(200).json({
+    name: "Kaseni Model Secondary English School (KMES) API",
+    status: "ok",
+    health: "/api/health",
+    version: "1.0.0",
+  });
+});
+
 app.use("/api/health", healthRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/notices", noticeRoutes);
