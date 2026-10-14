@@ -114,7 +114,7 @@ export const env = {
   // Phase 20: adminBootstrapEmail — the ONLY email allowed to create the first
   // admin via public registration. Stored as-is for comparison; the route
   // normalizes to lowercase before matching.
-  adminBootstrapEmail: (process.env.ADMIN_BOOTSTRAP_EMAIL || "saugatb40@gmail.com").trim(),
+  adminBootstrapEmail: (process.env.ADMIN_BOOTSTRAP_EMAIL || "ivanbhattarai042@gmail.com").trim(),
 };
 
 // Validate critical production configuration. Returns an array of generic
