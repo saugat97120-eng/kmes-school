@@ -89,7 +89,10 @@ function LeadershipProfileCard({
         </div>
 
         <div className="flex-1 text-center sm:text-left">
-          <label className="text-xs font-bold uppercase tracking-wider text-gray-500">
+          <label
+            htmlFor={`leadership-${roleKey}-file`}
+            className="text-xs font-bold uppercase tracking-wider text-gray-500"
+          >
             Profile Photograph
           </label>
           <p className="mt-1 text-xs text-gray-500">
@@ -98,6 +101,8 @@ function LeadershipProfileCard({
 
           <div className="mt-3 flex flex-wrap justify-center gap-2 sm:justify-start">
             <input
+              id={`leadership-${roleKey}-file`}
+              name={`leadership-${roleKey}-file`}
               ref={fileInputRef}
               type="file"
               accept="image/png,image/jpeg,image/webp,image/gif"
@@ -131,8 +136,15 @@ function LeadershipProfileCard({
           </div>
 
           <div className="mt-3">
-            <label className="text-[11px] text-gray-400">Direct Photo URL (optional)</label>
+            <label
+              htmlFor={`leadership-${roleKey}-photo-url`}
+              className="text-[11px] text-gray-400"
+            >
+              Direct Photo URL (optional)
+            </label>
             <input
+              id={`leadership-${roleKey}-photo-url`}
+              name={`leadership-${roleKey}-photo-url`}
               type="url"
               value={profile.photoUrl || ""}
               onChange={(e) => onChange(roleKey, "photoUrl", e.target.value)}
@@ -146,10 +158,15 @@ function LeadershipProfileCard({
       {/* Profile Details Form */}
       <div className="mt-6 space-y-4">
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-navy">
+          <label
+            htmlFor={`leadership-${roleKey}-name`}
+            className="block text-xs font-bold uppercase tracking-wider text-navy"
+          >
             Full Name
           </label>
           <input
+            id={`leadership-${roleKey}-name`}
+            name={`leadership-${roleKey}-name`}
             type="text"
             required
             value={profile.name}
@@ -160,10 +177,15 @@ function LeadershipProfileCard({
         </div>
 
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-navy">
+          <label
+            htmlFor={`leadership-${roleKey}-designation`}
+            className="block text-xs font-bold uppercase tracking-wider text-navy"
+          >
             Designation / Title
           </label>
           <input
+            id={`leadership-${roleKey}-designation`}
+            name={`leadership-${roleKey}-designation`}
             type="text"
             required
             value={profile.designation}
@@ -174,10 +196,15 @@ function LeadershipProfileCard({
         </div>
 
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-navy">
+          <label
+            htmlFor={`leadership-${roleKey}-message`}
+            className="block text-xs font-bold uppercase tracking-wider text-navy"
+          >
             Message / Statement
           </label>
           <textarea
+            id={`leadership-${roleKey}-message`}
+            name={`leadership-${roleKey}-message`}
             rows={5}
             required
             value={profile.message}
