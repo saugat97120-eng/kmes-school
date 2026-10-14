@@ -42,13 +42,18 @@ import PermissionRoute from "./admin/PermissionRoute";
 import { PERMISSIONS } from "./admin/permissions";
 import { resourceConfigs } from "./admin/resourceConfigs";
 
+import EmergencyAlertBar from "./components/common/EmergencyAlertBar";
+import FloatingQuickContact from "./components/common/FloatingQuickContact";
+
 function PublicLayout({ children }) {
   return (
     <>
+      <EmergencyAlertBar />
       <TopBar />
       <Navbar />
       {children}
       <Footer />
+      <FloatingQuickContact />
     </>
   );
 }

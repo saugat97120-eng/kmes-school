@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import PageHeader from "../components/common/PageHeader";
 import Container from "../components/common/Container";
 import GalleryCard from "../components/cards/GalleryCard";
+import CardSkeleton from "../components/common/CardSkeleton";
 import { X } from "lucide-react";
 import { fetchGallery, handleFetchError } from "../utils/apiHelpers";
 
@@ -62,8 +63,8 @@ function Gallery() {
           </div>
 
           {loading ? (
-            <div className="flex justify-center py-12">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-navy"></div>
+            <div className="mt-10">
+              <CardSkeleton count={8} />
             </div>
           ) : (
             <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">

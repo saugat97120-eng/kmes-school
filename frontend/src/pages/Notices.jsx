@@ -3,6 +3,7 @@ import PageHeader from "../components/common/PageHeader";
 import Container from "../components/common/Container";
 import NoticeCard from "../components/cards/NoticeCard";
 import EmptyState from "../components/common/EmptyState";
+import CardSkeleton from "../components/common/CardSkeleton";
 import { Search } from "lucide-react";
 import { fetchNotices, handleFetchError } from "../utils/apiHelpers";
 
@@ -60,9 +61,7 @@ function Notices() {
           )}
 
           {loading ? (
-            <div className="flex justify-center py-12">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-navy"></div>
-            </div>
+            <CardSkeleton count={6} type="notice" />
           ) : filtered.length === 0 ? (
             <EmptyState
               title="No notices found"

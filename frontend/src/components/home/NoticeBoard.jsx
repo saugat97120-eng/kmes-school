@@ -3,6 +3,7 @@ import SectionHeading from "../common/SectionHeading";
 import Button from "../common/Button";
 import NoticeCard from "../cards/NoticeCard";
 import EmptyState from "../common/EmptyState";
+import CardSkeleton from "../common/CardSkeleton";
 import useApiList from "../../hooks/useApiList";
 import { fetchNotices } from "../../utils/apiHelpers";
 
@@ -19,7 +20,7 @@ function NoticeBoard() {
         <SectionHeading eyebrow="Notice Board" title="Latest Notices" centered />
         <div className="mt-12">
           {loading ? (
-            <p className="text-center text-sm text-gray-500">Loading notices...</p>
+            <CardSkeleton count={3} type="notice" />
           ) : notices.length === 0 ? (
             <EmptyState
               title={error ? "Notices could not be loaded" : "No notices available"}

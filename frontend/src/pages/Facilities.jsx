@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import PageHeader from "../components/common/PageHeader";
 import Container from "../components/common/Container";
 import FacilityCard from "../components/cards/FacilityCard";
+import CardSkeleton from "../components/common/CardSkeleton";
 import { fetchFacilities, handleFetchError } from "../utils/apiHelpers";
 
 function Facilities() {
@@ -38,9 +39,7 @@ function Facilities() {
           )}
 
           {loading ? (
-            <div className="flex justify-center py-12">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-navy"></div>
-            </div>
+            <CardSkeleton count={6} />
           ) : (
             <>
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

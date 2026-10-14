@@ -3,6 +3,7 @@ import PageHeader from "../components/common/PageHeader";
 import Container from "../components/common/Container";
 import EventCard from "../components/cards/EventCard";
 import EmptyState from "../components/common/EmptyState";
+import CardSkeleton from "../components/common/CardSkeleton";
 import { fetchEvents, handleFetchError } from "../utils/apiHelpers";
 
 function Events() {
@@ -39,9 +40,7 @@ function Events() {
           )}
 
           {loading ? (
-            <div className="flex justify-center py-12">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-navy"></div>
-            </div>
+            <CardSkeleton count={6} />
           ) : events.length === 0 ? (
             <EmptyState title="No events available" description="Upcoming events will appear here." />
           ) : (
