@@ -104,7 +104,8 @@ app.use(
 if (Number(env.trustProxy) > 0) {
   app.set("trust proxy", Number(env.trustProxy));
 }
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use(sanitizeInput);
 app.use(morgan(isProduction() ? "combined" : "dev"));
 

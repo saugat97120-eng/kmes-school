@@ -1,5 +1,6 @@
 import express from "express";
 import crypto from "node:crypto";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { body, validationResult } from "express-validator";
 import User from "../models/User.js";
@@ -313,7 +314,14 @@ router.post(
         }
       }
 
-      if (!user || !(await user.comparePassword(req.body.password))) {
+      // Constant-time check: always perform a bcrypt comparison even when the user
+      // does not exist, preventing timing analysis from leaking account existence.
+      const DUMMY_HASH = "$2b$10$wT8vM97XvY5w2K3p5Y9T2O1M6K5J4L3H2G1F0E9D8C7B6A5Z4Y3X2";
+      const passwordValid = user
+        ? await user.comparePassword(req.body.password)
+        : await bcrypt.compare(String(req.body.password), DUMMY_HASH);
+
+      if (!user || !passwordValid) {
         return res.status(401).json({ success: false, message: "Invalid credentials" });
       }
       res.json({
