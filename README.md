@@ -330,6 +330,8 @@ e63ac55 fix(lint): remove unused imports and refactor loadData in LeadershipMana
 2b249b3 feat(audit): fall back to offline backup snapshot when MongoDB connection is unavailable
 c5e6850 docs: add comprehensive project documentation from 1st to last (KMES_COMPLETE_PROJECT_REPORT.md)
 b58e92b docs: expand master report with configuration checklist and advanced UI/UX roadmap
+eb58f35 docs: integrate master documentation into root README.md from 1st to last
+dd3135d feat(ui-ux): add emergency alert bar, floating quick contact, card skeleton loaders, and digital admission voucher slip
 ```
 
 ---
