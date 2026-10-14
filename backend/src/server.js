@@ -1,8 +1,8 @@
+import "./config/loadEnv.js";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
-import dotenv from "dotenv";
 import rateLimit from "express-rate-limit";
 
 import { connectDB, registerGracefulShutdown } from "./config/database.js";
@@ -33,7 +33,7 @@ import inboxRoutes from "./routes/inbox.routes.js";
 import facebookRoutes from "./integrations/facebook/facebook.routes.js";
 import aiRoutes from "./integrations/ai/ai.routes.js";
 
-dotenv.config();
+const VERCEL_PREVIEW_ORIGIN = /^https:\/\/kmes-school(-[a-z0-9]+)*\.vercel\.app$/;
 
 const app = express();
 const PORT = env.port;
@@ -47,6 +47,12 @@ await connectDB();
 if (isProduction()) {
   for (const problem of validateProductionConfiguration()) {
     console.warn(`[config] ${problem}`);
+  }
+  // Without a JWT secret every login would fail with an opaque 500. Refuse to
+  // boot instead of running half-broken.
+  if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+    console.error("[config] JWT_SECRET is missing or shorter than 32 characters. Refusing to start in production.");
+    process.exit(1);
   }
 } else if (env.nodeEnv === "staging") {
   for (const problem of validateStagingConfiguration()) {
@@ -74,9 +80,17 @@ app.use(
   cors({
     origin(origin, callback) {
       const allowed = env.allowedOrigins;
-      // Allow non-browser / same-origin / curl requests (no Origin header) and
-      const isKmesVercel = /^https:\/\/kmes-school.*\.vercel\.app$/.test(origin);
-      if (!origin || allowed.includes(origin) || isKmesVercel) {
+      // Allow non-browser / same-origin / curl requests (no Origin header).
+      if (!origin || allowed.includes(origin)) {
+        return callback(null, true);
+      }
+      // Vercel preview deployments (kmes-school-<hash>-<team>.vercel.app).
+      // Anyone can create a Vercel project with a matching name, so this is a
+      // convenience, not a trust boundary: no cookies are used (auth is a
+      // Bearer token) so it cannot read credentials. Once every real frontend
+      // origin is listed in ALLOWED_ORIGINS, set ALLOW_VERCEL_PREVIEWS=false.
+      const previewsOn = process.env.ALLOW_VERCEL_PREVIEWS !== "false";
+      if (previewsOn && VERCEL_PREVIEW_ORIGIN.test(origin)) {
         return callback(null, true);
       }
       return callback(null, false);
@@ -92,7 +106,7 @@ if (Number(env.trustProxy) > 0) {
 }
 app.use(express.json());
 app.use(sanitizeInput);
-app.use(morgan("dev"));
+app.use(morgan(isProduction() ? "combined" : "dev"));
 
 // General API rate limit
 app.use(

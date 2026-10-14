@@ -1,18 +1,5 @@
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
-import dotenv from "dotenv";
+import "./loadEnv.js";
 import { v2 as cloudinary } from "cloudinary";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const envPath = path.resolve(__dirname, "../../.env");
-
-if (fs.existsSync(envPath)) {
-  dotenv.config({ path: envPath, override: true });
-} else {
-  dotenv.config();
-}
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,

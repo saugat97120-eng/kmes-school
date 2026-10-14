@@ -1,7 +1,7 @@
 // Utility functions for fetching content from the backend API
 // Replaces hardcoded static data files
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+import { API_BASE } from "../config";
 
 async function fetchAPI(endpoint) {
   try {

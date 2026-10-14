@@ -15,7 +15,7 @@ import path from "node:path";
 import fs from "node:fs";
 import { pathToFileURL } from "node:url";
 import { createRequire } from "node:module";
-import { MongoMemoryServer } from "mongodb-memory-server";
+import { createMongo } from "./helpers/mongo.mjs";
 
 const BACKEND_DIR = path.resolve(import.meta.dirname, "..");
 const require = createRequire(pathToFileURL(path.join(BACKEND_DIR, "package.json")).href);
@@ -58,13 +58,8 @@ async function waitForServer() {
   throw new Error("Server did not come up");
 }
 
-// Hide real backend/.env so Cloudinary dotenv override cannot pollute.
-const envPath = path.join(BACKEND_DIR, ".env");
-const envOff = envPath + ".phase18c";
-let envHidden = false;
-if (fs.existsSync(envPath)) { fs.renameSync(envPath, envOff); envHidden = true; }
 
-const mongoServer = await MongoMemoryServer.create();
+const mongoServer = await createMongo();
 const uri = mongoServer.getUri();
 
 process.env.MONGODB_URI = uri;
@@ -84,15 +79,15 @@ process.env.FRONTEND_URL = "http://localhost:5173";
 process.env.RESET_LINK_BASE = "http://localhost:5173";
 
 await mongoose.connect(uri);
-const User = (await import(pathToFileURL(path.join(BACKEND_DIR, "src\\models\\User.js")).href)).default;
+const User = (await import(pathToFileURL(path.join(BACKEND_DIR, "src/models/User.js")).href)).default;
 await User.create({ name: "Admin", email: "admin@kmes.test", password: "AdminPass#1", role: "admin" });
 await User.create({ name: "Editor", email: "editor@kmes.test", password: "EditorPass#1", role: "editor" });
 await mongoose.disconnect();
 
-await import(pathToFileURL(path.join(BACKEND_DIR, "src\\server.js")).href);
+await import(pathToFileURL(path.join(BACKEND_DIR, "src/server.js")).href);
 await waitForServer();
 
-const emailSvc = await import(pathToFileURL(path.join(BACKEND_DIR, "src\\integrations\\email\\emailService.js")).href);
+const emailSvc = await import(pathToFileURL(path.join(BACKEND_DIR, "src/integrations/email/emailService.js")).href);
 const emailMock = emailSvc.getMockEmailAdapter();
 emailMock.clear();
 
@@ -176,7 +171,7 @@ check("upload without file: 400", noFile.status === 400, `status=${noFile.status
 
 // ---------- C. MEDIA DELETE (Cloudinary unconfigured) ----------
 console.log("\n=== MEDIA (unconfigured Cloudinary) ===");
-const Media = (await import(pathToFileURL(path.join(BACKEND_DIR, "src\\models\\Media.js")).href)).default;
+const Media = (await import(pathToFileURL(path.join(BACKEND_DIR, "src/models/Media.js")).href)).default;
 const mediaDoc = await Media.create({ url: "https://res.cloudinary.com/x/testing", publicId: "kmes-school/testing" });
 const del = await req("DELETE", `/api/media/${mediaDoc._id.toString()}`, { token: adminToken });
 check("media delete: 200 without Cloudinary crash", del.status === 200, `status=${del.status} body=${JSON.stringify(del.data)}`);
@@ -184,6 +179,9 @@ check("media doc removed from DB", !(await Media.findById(mediaDoc._id)));
 
 // ---------- D. CMS VALIDATION E2E ----------
 console.log("\n=== CMS VALIDATION ===");
+// Public GET /site-settings no longer inserts a document, so create one through the admin API.
+const seeded = await req("POST", "/api/site-settings", { token: adminToken, body: { schoolName: "KMES" } });
+check("site-settings admin POST creates the first record", seeded.status === 201, `status=${seeded.status}`);
 const adminAll = await req("GET", "/api/site-settings/admin/all", { token: adminToken });
 const settingsId = adminAll.data.data[0]._id;
 
@@ -303,7 +301,6 @@ check("leadership: photo remove leaves empty string", lRemovePhoto.data.data?.pr
 
 // ---------- RESTORE ----------
 await mongoServer.stop();
-if (envHidden) fs.renameSync(envOff, envPath);
 
 console.log(`\n-------------`);
 console.log(`PASS ${passed}`);

@@ -4,8 +4,10 @@ import Container from "../components/common/Container";
 import Button from "../components/common/Button";
 import { MapPin, Phone, Mail, Share2, Clock } from "lucide-react";
 import { useSiteSettings } from "../context/useSiteSettings";
+import { API_BASE } from "../config";
+import { isPlaceholder } from "../utils/format";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const FIELD_LIMITS = { name: 100, email: 254, phone: 30, subject: 200, message: 5000 };
 
 function Contact() {
   const { settings } = useSiteSettings();
@@ -15,19 +17,28 @@ function Contact() {
   const handleChange = (e) =>
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
+  const [errorText, setErrorText] = useState("");
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (status === "sending") return; // block double-submit
     setStatus("sending");
+    setErrorText("");
     try {
       const res = await fetch(`${API_BASE}/api/contact`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      if (!res.ok) throw new Error("Failed");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        const detail = Array.isArray(data.errors) && data.errors[0]?.msg ? data.errors[0].msg : data.message;
+        throw new Error(res.status === 429 || res.status === 400 ? detail || "Failed" : "Failed");
+      }
       setStatus("sent");
       setForm({ name: "", email: "", phone: "", subject: "", message: "" });
-    } catch {
+    } catch (err) {
+      setErrorText(err.message && err.message !== "Failed" ? err.message : "");
       setStatus("error");
     }
   };
@@ -46,12 +57,12 @@ function Contact() {
                     <MapPin size={18} className="text-gold shrink-0" /> {settings.address}
                   </span>
                 )}
-                {settings.phone && (
+                {!isPlaceholder(settings.phone) && (
                   <span className="flex items-center gap-3">
                     <Phone size={18} className="text-gold shrink-0" /> {settings.phone}
                   </span>
                 )}
-                {settings.email && (
+                {!isPlaceholder(settings.email) && (
                   <span className="flex items-center gap-3">
                     <Mail size={18} className="text-gold shrink-0" /> {settings.email}
                   </span>
@@ -91,6 +102,8 @@ function Contact() {
                 value={form.name}
                 onChange={handleChange}
                 placeholder="Name"
+                aria-label="Name"
+                maxLength={FIELD_LIMITS.name}
                 className="w-full rounded-md border border-gray-300 px-4 py-3 text-sm outline-none focus:border-navy"
               />
               <input
@@ -101,6 +114,8 @@ function Contact() {
                 value={form.email}
                 onChange={handleChange}
                 placeholder="Email"
+                aria-label="Email"
+                maxLength={FIELD_LIMITS.email}
                 className="w-full rounded-md border border-gray-300 px-4 py-3 text-sm outline-none focus:border-navy"
               />
               <input
@@ -109,6 +124,8 @@ function Contact() {
                 value={form.phone}
                 onChange={handleChange}
                 placeholder="Phone"
+                aria-label="Phone"
+                maxLength={FIELD_LIMITS.phone}
                 className="w-full rounded-md border border-gray-300 px-4 py-3 text-sm outline-none focus:border-navy"
               />
               <input
@@ -118,6 +135,8 @@ function Contact() {
                 value={form.subject}
                 onChange={handleChange}
                 placeholder="Subject"
+                aria-label="Subject"
+                maxLength={FIELD_LIMITS.subject}
                 className="w-full rounded-md border border-gray-300 px-4 py-3 text-sm outline-none focus:border-navy"
               />
               <textarea
@@ -127,10 +146,12 @@ function Contact() {
                 value={form.message}
                 onChange={handleChange}
                 placeholder="Message"
+                aria-label="Message"
+                maxLength={FIELD_LIMITS.message}
                 rows={5}
                 className="w-full rounded-md border border-gray-300 px-4 py-3 text-sm outline-none focus:border-navy"
               />
-              <Button type="submit" variant="primary" showArrow>
+              <Button type="submit" variant="primary" showArrow disabled={status === "sending"}>
                 {status === "sending" ? "Sending..." : "Send Message"}
               </Button>
               {status === "sent" && (
@@ -138,7 +159,7 @@ function Contact() {
               )}
               {status === "error" && (
                 <p className="text-sm text-red-600">
-                  Could not send message. Please try again later.
+                  {errorText || "Could not send message. Please try again later."}
                 </p>
               )}
             </form>

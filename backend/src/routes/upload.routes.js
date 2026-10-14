@@ -6,6 +6,7 @@ import { requirePermission, PERMISSIONS } from "../middleware/roles.js";
 import { validateImageUpload, DEFAULT_IMAGE_MAX_BYTES } from "../utils/fileValidation.js";
 import Media from "../models/Media.js";
 import { logActivity } from "../utils/logActivity.js";
+import { destroyAsset } from "../utils/cloudinaryCleanup.js";
 
 const router = express.Router();
 const upload = multer({
@@ -63,17 +64,24 @@ router.post("/", requireAuth, requirePermission(PERMISSIONS.MEDIA_UPLOAD), uploa
       stream.end(req.file.buffer);
     });
 
-    const media = await Media.create({
-      url: result.secure_url,
-      publicId: result.public_id,
-      filename: req.file.originalname,
-      format: result.format,
-      width: result.width,
-      height: result.height,
-      bytes: result.bytes,
-      uploadedBy: req.user?.id,
-      uploadedByName: req.user?.name,
-    });
+    let media;
+    try {
+      media = await Media.create({
+        url: result.secure_url,
+        publicId: result.public_id,
+        filename: req.file.originalname,
+        format: result.format,
+        width: result.width,
+        height: result.height,
+        bytes: result.bytes,
+        uploadedBy: req.user?.id,
+        uploadedByName: req.user?.name,
+      });
+    } catch (dbErr) {
+      // Do not leave an untracked orphan in Cloudinary if the DB write failed.
+      await destroyAsset(result.public_id, "image");
+      throw dbErr;
+    }
 
     await logActivity({
       req,

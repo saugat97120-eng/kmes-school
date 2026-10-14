@@ -34,7 +34,8 @@ export function AttachmentListField({ resource, itemId, attachments = [], onChan
   const [error, setError] = useState("");
 
   const handleFileSelect = async (e) => {
-    const file = e.target.files?.[0];
+    const input = e.target;
+    const file = input.files?.[0];
     if (!file) return;
 
     setError("");
@@ -57,6 +58,7 @@ export function AttachmentListField({ resource, itemId, attachments = [], onChan
     } catch (err) {
       setError(err.message || "Upload failed");
     } finally {
+      input.value = ""; // allow picking the same file again
       setUploading(false);
     }
   };

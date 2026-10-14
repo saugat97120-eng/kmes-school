@@ -16,14 +16,27 @@ function MediaLibrary() {
   const [query, setQuery] = useState("");
   const [uploading, setUploading] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
 
-  const load = () => {
-    setLoading(true);
+  // append=false reloads from page 1; append=true adds the next page.
+  const load = (append = false, pageNum = 1) => {
+    if (append) setLoadingMore(true);
+    else setLoading(true);
     api
-      .getMedia({ q: query })
-      .then((data) => setItems(data.data || []))
+      .getMedia({ q: query, page: pageNum })
+      .then((data) => {
+        setItems((prev) => (append ? [...prev, ...(data.data || [])] : data.data || []));
+        setPage(data.page || pageNum);
+        setPages(data.pages || 1);
+        setError("");
+      })
       .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+        setLoadingMore(false);
+      });
   };
 
   useEffect(() => {
@@ -111,11 +124,12 @@ function MediaLibrary() {
             No images uploaded yet.
           </div>
         ) : (
+          <>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {items.map((item) => (
               <div key={item._id} className="group overflow-hidden rounded-xl border border-gray-200 bg-white">
                 <div className="aspect-square w-full overflow-hidden bg-gray-100">
-                  <img src={item.url} alt={item.filename} className="h-full w-full object-cover" />
+                  <img src={item.url} alt={item.filename} loading="lazy" decoding="async" className="h-full w-full object-cover" />
                 </div>
                 <div className="p-3">
                   <p className="truncate text-xs font-semibold text-navy" title={item.filename}>
@@ -147,6 +161,19 @@ function MediaLibrary() {
               </div>
             ))}
           </div>
+          {page < pages && (
+            <div className="mt-6 text-center">
+              <button
+                type="button"
+                onClick={() => load(true, page + 1)}
+                disabled={loadingMore}
+                className="rounded-md border border-gray-300 bg-white px-5 py-2 text-sm font-semibold text-navy hover:bg-gray-50 disabled:opacity-60"
+              >
+                {loadingMore ? "Loading..." : "Load more"}
+              </button>
+            </div>
+          )}
+          </>
         )}
       </div>
     </div>

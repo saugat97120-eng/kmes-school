@@ -7,12 +7,12 @@ import { sanitizeSiteSettings } from "../utils/cmsValidation.js";
 
 const router = express.Router();
 
+// Public reads must never write. When nothing has been saved yet, return the
+// schema defaults as an unsaved document instead of inserting one (which could
+// also create duplicates when two first visitors arrive together).
 async function getDefaultSettings() {
   const existing = await SiteSettings.findOne().sort({ createdAt: -1 });
-  if (existing) return existing;
-
-  const created = await SiteSettings.create({});
-  return created;
+  return existing || new SiteSettings({});
 }
 
 router.get("/", async (req, res, next) => {

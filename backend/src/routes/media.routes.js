@@ -4,6 +4,7 @@ import cloudinary, { isCloudinaryConfigured } from "../config/cloudinary.js";
 import { requireAuth } from "../middleware/auth.js";
 import { requirePermission, PERMISSIONS } from "../middleware/roles.js";
 import { logActivity } from "../utils/logActivity.js";
+import { escapeRegex } from "../utils/escapeRegex.js";
 
 const router = express.Router();
 
@@ -12,7 +13,7 @@ router.get("/", requireAuth, requirePermission(PERMISSIONS.MEDIA_VIEW), async (r
   try {
     const { q, page = 1, limit = 40 } = req.query;
     const filter = {};
-    if (q) filter.filename = { $regex: q, $options: "i" };
+    if (q) filter.filename = { $regex: escapeRegex(q), $options: "i" };
 
     const pageNum = Math.max(1, parseInt(page, 10) || 1);
     const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 40));

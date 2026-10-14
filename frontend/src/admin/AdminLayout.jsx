@@ -18,6 +18,8 @@ import {
   ScrollText,
   Trash2,
   ChevronDown,
+  Menu,
+  X,
   Inbox,
   Share2,
 } from "lucide-react";
@@ -84,7 +86,7 @@ const groups = [
 
 const canView = (link) => !link.permission || hasPermission(link.permission);
 
-function NavGroup({ group }) {
+function NavGroup({ group, onNavigate }) {
   const [open, setOpen] = useState(true);
   const links = group.links.filter(canView);
   if (!links.length) return null;
@@ -93,7 +95,7 @@ function NavGroup({ group }) {
     return (
       <div className="space-y-1">
         {links.map((link) => (
-          <NavItem key={link.to} link={link} />
+          <NavItem key={link.to} link={link} onNavigate={onNavigate} />
         ))}
       </div>
     );
@@ -112,7 +114,7 @@ function NavGroup({ group }) {
       {open && (
         <div className="space-y-1">
           {links.map((link) => (
-            <NavItem key={link.to} link={link} />
+            <NavItem key={link.to} link={link} onNavigate={onNavigate} />
           ))}
         </div>
       )}
@@ -120,11 +122,12 @@ function NavGroup({ group }) {
   );
 }
 
-function NavItem({ link }) {
+function NavItem({ link, onNavigate }) {
   return (
     <NavLink
       to={link.to}
       end={link.end}
+      onClick={onNavigate}
       className={({ isActive }) =>
         `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition ${
           isActive ? "bg-navy text-white" : "text-gray-600 hover:bg-gray-100"
@@ -137,7 +140,44 @@ function NavItem({ link }) {
   );
 }
 
+function SidebarContent({ onNavigate, onLogout }) {
+  return (
+    <>
+      <div className="flex items-center gap-2 border-b border-gray-100 px-6 py-5">
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-navy font-serif text-sm font-bold text-gold">
+          K
+        </div>
+        <span className="font-serif text-base font-bold text-navy">KMES Admin</span>
+      </div>
+
+      <nav className="flex-1 space-y-4 overflow-y-auto px-3 py-5">
+        {groups.map((group, i) => (
+          <NavGroup key={group.label || i} group={group} onNavigate={onNavigate} />
+        ))}
+      </nav>
+
+      <div className="border-t border-gray-100 p-4">
+        <a
+          href="/"
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-gray-500 hover:bg-gray-100"
+        >
+          <ExternalLink size={14} /> View Live Site
+        </a>
+        <button
+          onClick={onLogout}
+          className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50"
+        >
+          <LogOut size={14} /> Logout
+        </button>
+      </div>
+    </>
+  );
+}
+
 function AdminLayout() {
+  const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
   const user = getUser();
 
@@ -155,40 +195,38 @@ function AdminLayout() {
   return (
     <div className="flex min-h-screen bg-bg-light">
       <aside className="hidden w-64 shrink-0 flex-col border-r border-gray-200 bg-white lg:flex">
-        <div className="flex items-center gap-2 border-b border-gray-100 px-6 py-5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-navy font-serif text-sm font-bold text-gold">
-            K
-          </div>
-          <span className="font-serif text-base font-bold text-navy">KMES Admin</span>
-        </div>
-
-        <nav className="flex-1 space-y-4 overflow-y-auto px-3 py-5">
-          {groups.map((group, i) => (
-            <NavGroup key={group.label || i} group={group} />
-          ))}
-        </nav>
-
-        <div className="border-t border-gray-100 p-4">
-          <a
-            href="/"
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-gray-500 hover:bg-gray-100"
-          >
-            <ExternalLink size={14} /> View Live Site
-          </a>
-          <button
-            onClick={handleLogout}
-            className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50"
-          >
-            <LogOut size={14} /> Logout
-          </button>
-        </div>
+        <SidebarContent onLogout={handleLogout} />
       </aside>
+
+      {/* Mobile / tablet navigation drawer */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Admin navigation">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
+          <aside className="absolute inset-y-0 left-0 flex w-72 max-w-[85%] flex-col bg-white shadow-xl">
+            <button
+              type="button"
+              onClick={() => setMobileOpen(false)}
+              aria-label="Close menu"
+              className="absolute right-3 top-4 rounded-lg p-1 text-gray-500 hover:bg-gray-100"
+            >
+              <X size={18} />
+            </button>
+            <SidebarContent onNavigate={() => setMobileOpen(false)} onLogout={handleLogout} />
+          </aside>
+        </div>
+      )}
 
       <div className="flex-1">
         <header className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4 lg:hidden">
-          <span className="font-serif text-base font-bold text-navy">KMES Admin</span>
+          <button
+            type="button"
+            onClick={() => setMobileOpen(true)}
+            aria-label="Open menu"
+            className="flex items-center gap-2 rounded-lg p-1 text-navy hover:bg-gray-100"
+          >
+            <Menu size={20} />
+            <span className="font-serif text-base font-bold">KMES Admin</span>
+          </button>
           <button onClick={handleLogout} className="text-xs font-semibold text-red-600">
             Logout
           </button>

@@ -1,6 +1,7 @@
 import Container from "../common/Container";
 import Button from "../common/Button";
 import { useSiteSettings } from "../../context/useSiteSettings";
+import { cssUrl } from "../../utils/format";
 
 function HeroSection() {
   const { settings } = useSiteSettings();
@@ -10,7 +11,7 @@ function HeroSection() {
       <div
         className="absolute inset-0 bg-cover bg-center opacity-20"
         style={{
-          backgroundImage: `url('${settings.heroImage || "https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=1600&q=80"}')`,
+          backgroundImage: cssUrl(settings.heroImage || "https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=1600&q=80"),
         }}
       />
       <Container className="relative">

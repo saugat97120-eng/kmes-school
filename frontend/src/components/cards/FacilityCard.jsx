@@ -1,10 +1,15 @@
+import { IMAGE_FALLBACK, handleImageError } from "../../utils/format";
+
 function FacilityCard({ facility }) {
   return (
     <article className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
       <div className="aspect-[4/3] overflow-hidden bg-gray-100">
         <img
-          src={facility.image}
+          src={facility.image || IMAGE_FALLBACK}
           alt={facility.title}
+          loading="lazy"
+          decoding="async"
+          onError={handleImageError}
           className="h-full w-full object-cover"
         />
       </div>

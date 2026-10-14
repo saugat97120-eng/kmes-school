@@ -54,10 +54,10 @@ function Navbar() {
           {navLinks.map((link) =>
             link.children ? (
               <div key={link.to} className="group relative">
-                <button className="flex items-center gap-1 text-sm font-semibold text-navy hover:text-gold">
+                <NavLink to={link.to} className={(state) => `${linkClass(state)} flex items-center gap-1`}>
                   {link.label} <ChevronDown size={14} />
-                </button>
-                <div className="invisible absolute left-0 top-full z-50 w-52 rounded-lg border border-gray-200 bg-white py-2 opacity-0 shadow-lg transition group-hover:visible group-hover:opacity-100">
+                </NavLink>
+                <div className="invisible absolute left-0 top-full z-50 w-52 rounded-lg border border-gray-200 bg-white py-2 opacity-0 shadow-lg transition group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100">
                   {link.children.map((child) => (
                     <Link
                       key={child.to}

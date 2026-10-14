@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import { SiteSettingsProvider } from "./context/SiteSettingsContext";
+import ScrollToTop from "./components/common/ScrollToTop";
 import TopBar from "./components/layout/TopBar";
 import Navbar from "./components/layout/Navbar";
 import Footer from "./components/layout/Footer";
@@ -56,6 +57,7 @@ function App() {
   return (
     <SiteSettingsProvider>
       <BrowserRouter>
+        <ScrollToTop />
         <Routes>
           {/* Admin routes: separate layout, no public navbar/footer */}
           <Route path="/admin/login" element={<AdminLogin />} />
@@ -116,7 +118,7 @@ function App() {
                 path={config.resource}
                 element={
                   <PermissionRoute permission={PERMISSIONS.CONTENT_VIEW}>
-                    <ResourceManager config={config} />
+                    <ResourceManager key={config.resource} config={config} />
                   </PermissionRoute>
                 }
               />

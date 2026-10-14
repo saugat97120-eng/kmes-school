@@ -14,7 +14,7 @@ function LeadershipSection() {
         <SectionHeading
           eyebrow="Leadership"
           title="Guided by Dedicated Leadership"
-          description="Messages from the school's leadership are shared here and can be changed from the admin dashboard."
+          description="Messages from the school's leadership."
           centered
         />
 

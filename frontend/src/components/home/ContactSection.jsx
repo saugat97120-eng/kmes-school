@@ -2,6 +2,7 @@ import Container from "../common/Container";
 import SectionHeading from "../common/SectionHeading";
 import { MapPin, Phone, Mail } from "lucide-react";
 import { useSiteSettings } from "../../context/useSiteSettings";
+import { isPlaceholder } from "../../utils/format";
 
 function ContactSection() {
   const { settings } = useSiteSettings();
@@ -15,14 +16,18 @@ function ContactSection() {
             <MapPin className="mx-auto text-gold" />
             <p className="mt-2 text-sm text-gray-600">{settings.address}</p>
           </div>
-          <div className="text-center">
-            <Phone className="mx-auto text-gold" />
-            <p className="mt-2 text-sm text-gray-600">{settings.phone}</p>
-          </div>
-          <div className="text-center">
-            <Mail className="mx-auto text-gold" />
-            <p className="mt-2 text-sm text-gray-600">{settings.email}</p>
-          </div>
+          {!isPlaceholder(settings.phone) && (
+            <div className="text-center">
+              <Phone className="mx-auto text-gold" />
+              <p className="mt-2 text-sm text-gray-600">{settings.phone}</p>
+            </div>
+          )}
+          {!isPlaceholder(settings.email) && (
+            <div className="text-center">
+              <Mail className="mx-auto text-gold" />
+              <p className="mt-2 text-sm text-gray-600">{settings.email}</p>
+            </div>
+          )}
         </div>
       </Container>
     </section>

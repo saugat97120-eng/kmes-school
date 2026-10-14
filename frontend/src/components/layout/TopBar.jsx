@@ -1,5 +1,6 @@
 import { Phone, Mail, Share2 } from "lucide-react";
 import { useSiteSettings } from "../../context/useSiteSettings";
+import { isPlaceholder } from "../../utils/format";
 
 function TopBar() {
   const { settings } = useSiteSettings();
@@ -8,13 +9,17 @@ function TopBar() {
     <div className="hidden bg-navy-2 py-2 text-xs text-gray-200 sm:block">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-5">
-          <span className="flex items-center gap-1.5">
-            <Phone size={13} /> {settings.phone}
-          </span>
+          {!isPlaceholder(settings.phone) && (
+            <span className="flex items-center gap-1.5">
+              <Phone size={13} /> {settings.phone}
+            </span>
+          )}
 
-          <span className="flex items-center gap-1.5">
-            <Mail size={13} /> {settings.email}
-          </span>
+          {!isPlaceholder(settings.email) && (
+            <span className="flex items-center gap-1.5">
+              <Mail size={13} /> {settings.email}
+            </span>
+          )}
         </div>
         <a
           href={settings.facebookUrl || "#"}

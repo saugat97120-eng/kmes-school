@@ -1,3 +1,5 @@
+import { handleImageError } from "../../utils/format";
+
 function GalleryCard({ image, onClick }) {
   return (
     <button
@@ -8,6 +10,9 @@ function GalleryCard({ image, onClick }) {
       <img
         src={image.src}
         alt={image.title}
+        loading="lazy"
+        decoding="async"
+        onError={handleImageError}
         className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
       />
       <div className="absolute inset-0 bg-black/0 transition group-hover:bg-black/30" />

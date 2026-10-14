@@ -86,7 +86,7 @@ services:
       - key: JWT_SECRET
         sync: false
     # Backend has no build step; source runs directly.
-    buildCommand: npm install
+    buildCommand: npm ci
     startCommand: npm start
     healthCheckPath: /api/health
     autoDeploy: true

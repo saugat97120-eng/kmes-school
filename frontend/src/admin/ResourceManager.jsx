@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Plus, Pencil, Trash2, X, Pin, Search, CheckSquare, Square, Eye } from "lucide-react";
 import { api, canDeleteContent, canSubmitContent, canApproveContent, canRejectContent, canPublishContent, canUnpublishContent, canUploadMedia } from "./api";
 import { AttachmentListField } from "./AttachmentListField";
@@ -25,6 +25,10 @@ function ResourceManager({ config }) {
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(emptyForm(fields));
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [notice, setNotice] = useState("");
+  const [editingStatus, setEditingStatus] = useState("");
+  const mounted = useRef(false);
 
   // search / filter / pagination
   const [query, setQuery] = useState("");
@@ -65,6 +69,11 @@ function ResourceManager({ config }) {
 
   // debounce search/filter changes back to page 1 + reload
   useEffect(() => {
+    // The first effect already loads on mount; only react to later search/filter edits.
+    if (!mounted.current) {
+      mounted.current = true;
+      return undefined;
+    }
     const t = setTimeout(() => {
       if (page !== 1) setPage(1);
       else load();
@@ -75,16 +84,21 @@ function ResourceManager({ config }) {
 
   const openCreate = () => {
     setEditingId(null);
+    setEditingStatus("");
     setForm(emptyForm(fields));
     setFormOpen(true);
   };
 
   const openEdit = (item) => {
     setEditingId(item._id);
+    setEditingStatus(item.status || "");
     const next = emptyForm(fields);
     fields.forEach((f) => {
       let val = item[f.name];
-      if (f.type === "date" && val) val = new Date(val).toISOString().slice(0, 10);
+      if (f.type === "date" && val) {
+        const parsed = new Date(val);
+        val = Number.isNaN(parsed.getTime()) ? "" : parsed.toISOString().slice(0, 10);
+      }
       next[f.name] = val ?? next[f.name];
     });
     setForm(next);
@@ -104,22 +118,32 @@ function ResourceManager({ config }) {
     if (!file) return;
     try {
       setError("");
+      setUploading(true);
       const uploaded = await api.uploadImage(file);
       handleChange(field, uploaded.url);
     } catch (err) {
       setError(err.message || "Image upload failed.");
+    } finally {
+      setUploading(false);
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (uploading) return;
     setSaving(true);
     setError("");
     try {
+      // Empty optional dates are omitted so the server keeps its default
+      // instead of storing an empty value that later renders as 1 Jan 1970.
+      const payload = { ...form };
+      fields.forEach((fld) => {
+        if (fld.type === "date" && !payload[fld.name]) delete payload[fld.name];
+      });
       if (editingId) {
-        await api.update(resource, editingId, form);
+        await api.update(resource, editingId, payload);
       } else {
-        await api.create(resource, form);
+        await api.create(resource, payload);
       }
       setFormOpen(false);
       await load();
@@ -162,7 +186,16 @@ function ResourceManager({ config }) {
   const handleBulkPublish = async (published) => {
     if (!selected.length) return;
     try {
-      await api.bulkPublish(resource, selected, published);
+      setNotice("");
+      const res = await api.bulkPublish(resource, selected, published);
+      const r = res?.results || {};
+      const done = (r.published?.length || 0) + (r.unpublished?.length || 0);
+      const skipped = (r.invalidState?.length || 0) + (r.skipped?.length || 0) + (r.unauthorized?.length || 0) + (r.failed?.length || 0);
+      setNotice(
+        skipped
+          ? `${done} item(s) updated, ${skipped} skipped (wrong workflow state or no permission).`
+          : `${done} item(s) ${published ? "published" : "unpublished"}.`
+      );
       await load();
     } catch (err) {
       setError(err.message);
@@ -238,6 +271,9 @@ function ResourceManager({ config }) {
 
       {error && (
         <div className="mt-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div>
+      )}
+      {notice && !error && (
+        <div className="mt-4 rounded-md bg-blue-50 px-4 py-3 text-sm text-blue-700" role="status">{notice}</div>
       )}
 
       {/* Search + filter toolbar */}
@@ -455,9 +491,18 @@ function ResourceManager({ config }) {
             </div>
 
             <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+              {editingId && editingStatus && editingStatus !== "draft" && (
+                <p className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                  This item is currently <strong>{editingStatus.replace("_", " ")}</strong>. Saving changes sends it back to
+                  draft so it can be reviewed again before going live.
+                </p>
+              )}
               {fields.map((field) => (
                 <div key={field.name}>
-                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <label
+                    htmlFor={`resource-${field.name}`}
+                    className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500"
+                  >
                     {field.label}
                   </label>
 
@@ -500,7 +545,10 @@ function ResourceManager({ config }) {
                           name={`${field.name}-file`}
                           type="file"
                           accept="image/*"
-                          onChange={(e) => handleImageUpload(field, e.target.files?.[0])}
+                          onChange={(e) => {
+                            handleImageUpload(field, e.target.files?.[0]);
+                            e.target.value = "";
+                          }}
                           className="block w-full text-sm text-gray-500 file:mr-3 file:rounded-md file:border-0 file:bg-navy file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white"
                         />
                       ) : (
@@ -508,10 +556,12 @@ function ResourceManager({ config }) {
                           You do not have permission to upload new images. Paste an existing image URL below, or ask an admin to upload one to the Media Library.
                         </p>
                       )}
+                      {uploading && <p className="text-xs text-gray-500">Uploading image...</p>}
                       <input
                         id={`resource-${field.name}`}
                         name={field.name}
                         type="text"
+                        required={field.required}
                         value={form[field.name] || ""}
                         onChange={(e) => handleChange(field, e.target.value)}
                         placeholder="Image URL"
@@ -582,10 +632,10 @@ function ResourceManager({ config }) {
                 </button>
                 <button
                   type="submit"
-                  disabled={saving}
+                  disabled={saving || uploading}
                   className="rounded-md bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-2 disabled:opacity-60"
                 >
-                  {saving ? "Saving..." : "Save"}
+                  {saving ? "Saving..." : uploading ? "Uploading..." : "Save"}
                 </button>
               </div>
             </form>

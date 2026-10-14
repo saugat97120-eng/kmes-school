@@ -81,6 +81,24 @@ export const attachmentUpload = multer({
   },
 });
 
+// Content signatures for document uploads, so a renamed executable/script cannot
+// pass as a PDF or Office file just by carrying the right extension and MIME.
+const PDF_MAGIC = Buffer.from("%PDF-");
+const OLE_MAGIC = Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]); // .doc .xls .ppt
+const ZIP_MAGIC = Buffer.from([0x50, 0x4b, 0x03, 0x04]); // .docx .xlsx .pptx
+
+export function documentSignatureMatches(buffer, extension) {
+  if (!Buffer.isBuffer(buffer) || buffer.length < 8) return false;
+  const starts = (magic) => buffer.subarray(0, magic.length).equals(magic);
+  if (extension === ".pdf") {
+    // Some producers put a few bytes before %PDF; the spec allows 1024.
+    return buffer.subarray(0, 1024).includes(PDF_MAGIC);
+  }
+  if (extension === ".doc" || extension === ".xls" || extension === ".ppt") return starts(OLE_MAGIC);
+  if (extension === ".docx" || extension === ".xlsx" || extension === ".pptx") return starts(ZIP_MAGIC);
+  return false;
+}
+
 export function validateAttachmentFile(req, res, next) {
   if (!req.file) {
     return res.status(400).json({
@@ -124,6 +142,13 @@ export function validateAttachmentFile(req, res, next) {
     if (!check.ok) {
       return res.status(400).json({ success: false, message: check.reason });
     }
+  }
+
+  if (fileInfo.type !== "image" && !documentSignatureMatches(req.file.buffer, extension)) {
+    return res.status(400).json({
+      success: false,
+      message: "File content does not match its type.",
+    });
   }
 
   req.fileMetadata = {

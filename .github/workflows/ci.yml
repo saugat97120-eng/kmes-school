@@ -35,6 +35,12 @@ jobs:
         run: node tests/deployment-foundation.test.mjs
       - name: Phase 20 unit tests
         run: node tests/phase-20.unit.mjs
+      - name: Integration + regression tests (in-memory MongoDB)
+        run: |
+          node tests/phase-18c.integration.mjs
+          node tests/phase-20.integration.mjs
+          node tests/phase-20.bootstrap.mjs
+          node tests/phase-21.regression.mjs
       - name: npm audit (high/critical)
         run: npm audit --audit-level=high
 

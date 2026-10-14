@@ -12,9 +12,9 @@ import path from "node:path";
 import fs from "node:fs";
 import { pathToFileURL } from "node:url";
 import { createRequire } from "node:module";
-import { MongoMemoryServer } from "mongodb-memory-server";
+import { createMongo } from "./helpers/mongo.mjs";
 
-const BACKEND_DIR = "C:\\Users\\Dell\\Downloads\\kmes-school-website-updated (2)\\kmes-school\\backend";
+const BACKEND_DIR = path.resolve(import.meta.dirname, "..");
 const require = createRequire(pathToFileURL(path.join(BACKEND_DIR, "package.json")).href);
 const mongoose = require("mongoose");
 
@@ -50,12 +50,8 @@ async function waitForServer() {
   throw new Error("Server did not come up");
 }
 
-const envPath = path.join(BACKEND_DIR, ".env");
-const envOff = envPath + ".phase20";
-let envHidden = false;
-if (fs.existsSync(envPath)) { fs.renameSync(envPath, envOff); envHidden = true; }
 
-const mongoServer = await MongoMemoryServer.create();
+const mongoServer = await createMongo();
 const uri = mongoServer.getUri();
 
 process.env.MONGODB_URI = uri;
@@ -77,15 +73,15 @@ process.env.ALLOW_ADMIN_BOOTSTRAP = "true"; // flag ON but users exist -> must s
 process.env.ADMIN_BOOTSTRAP_EMAIL = "saugatb40@gmail.com";
 
 await mongoose.connect(uri);
-const User = (await import(pathToFileURL(path.join(BACKEND_DIR, "src\\models\\User.js")).href)).default;
+const User = (await import(pathToFileURL(path.join(BACKEND_DIR, "src/models/User.js")).href)).default;
 await User.create({ name: "Admin", email: "admin@kmes.test", password: "AdminPass#1", role: "admin" });
 await User.create({ name: "Editor", email: "editor@kmes.test", password: "EditorPass#1", role: "editor" });
 await mongoose.disconnect();
 
-await import(pathToFileURL(path.join(BACKEND_DIR, "src\\server.js")).href);
+await import(pathToFileURL(path.join(BACKEND_DIR, "src/server.js")).href);
 await waitForServer();
 
-const emailSvc = await import(pathToFileURL(path.join(BACKEND_DIR, "src\\integrations\\email\\emailService.js")).href);
+const emailSvc = await import(pathToFileURL(path.join(BACKEND_DIR, "src/integrations/email/emailService.js")).href);
 const emailMock = emailSvc.getMockEmailAdapter();
 
 // ---------- A. REGISTRATION IS CLOSED (users present) -----------------------
@@ -157,7 +153,6 @@ check("login with new password works", newLogin.status === 200 && newLogin.data.
 
 // ---------- RESTORE ----------
 await mongoServer.stop();
-if (envHidden) fs.renameSync(envOff, envPath);
 
 console.log(`\n-------------`);
 console.log(`PASS ${passed}`);

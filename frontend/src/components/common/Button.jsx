@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 
-function Button({ children, to, variant = "primary", showArrow = false, onClick, type = "button" }) {
+function Button({ children, to, variant = "primary", showArrow = false, onClick, type = "button", disabled = false }) {
   const base =
     "inline-flex items-center justify-center gap-2 rounded-md px-6 py-3 font-semibold transition cursor-pointer";
 
@@ -12,7 +12,7 @@ function Button({ children, to, variant = "primary", showArrow = false, onClick,
     light: "border border-white/30 text-white hover:bg-white/10",
   };
 
-  const className = `${base} ${variants[variant]}`;
+  const className = `${base} ${variants[variant]}${disabled ? " opacity-60 cursor-not-allowed pointer-events-none" : ""}`;
 
   if (to) {
     return (
@@ -24,7 +24,7 @@ function Button({ children, to, variant = "primary", showArrow = false, onClick,
   }
 
   return (
-    <button type={type} onClick={onClick} className={className}>
+    <button type={type} onClick={onClick} className={className} disabled={disabled}>
       {children}
       {showArrow && <ArrowRight size={18} />}
     </button>

@@ -2,8 +2,7 @@
 // Stores the JWT in localStorage — fine for this school CMS use case,
 // where the only "users" are trusted staff/admin accounts.
 import { PERMISSIONS, ROLE_PERMISSIONS } from "./permissions";
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+import { API_BASE } from "../config";
 const TOKEN_KEY = "kmes_admin_token";
 const USER_KEY = "kmes_admin_user";
 
@@ -13,7 +12,14 @@ export function getToken() {
 
 export function getUser() {
   const raw = localStorage.getItem(USER_KEY);
-  return raw ? JSON.parse(raw) : null;
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    // Corrupted storage must never white-screen the admin: treat as logged out.
+    localStorage.removeItem(USER_KEY);
+    return null;
+  }
 }
 
 export function setSession(token, user) {
@@ -50,6 +56,18 @@ export async function refreshSession() {
   }
 }
 
+// Prefer the backend's per-field validation messages over the generic
+// "Validation failed." so editors can see what to fix.
+export function errorMessage(data, status) {
+  if (Array.isArray(data?.errors) && data.errors.length) {
+    const parts = data.errors
+      .map((e) => (typeof e === "string" ? e : e?.msg || e?.message))
+      .filter(Boolean);
+    if (parts.length) return parts.join(" ");
+  }
+  return data?.message || `Request failed (${status})`;
+}
+
 async function request(path, options = {}) {
   const token = getToken();
   const headers = {
@@ -62,10 +80,15 @@ async function request(path, options = {}) {
   const data = await res.json().catch(() => ({}));
 
   if (!res.ok) {
-    if (res.status === 401) {
+    if (res.status === 401 && !path.startsWith("/api/auth/login")) {
       clearSession();
+      // Expired/invalid session: send the user to the login page instead of
+      // leaving them on a screen where every action silently fails.
+      if (typeof window !== "undefined" && window.location.pathname.startsWith("/admin") && !window.location.pathname.startsWith("/admin/login")) {
+        window.location.assign("/admin/login?expired=1");
+      }
     }
-    throw new Error(data.message || `Request failed (${res.status})`);
+    throw new Error(errorMessage(data, res.status));
   }
 
   return data;
@@ -229,11 +252,17 @@ export const api = {
       }
 
       xhr.addEventListener("load", () => {
-        const data = JSON.parse(xhr.responseText);
-        if (xhr.status >= 200 && xhr.status < 300) {
+        // A proxy/cold-start error page is not JSON; never let that hang the UI.
+        let data = {};
+        try {
+          data = JSON.parse(xhr.responseText);
+        } catch {
+          data = {};
+        }
+        if (xhr.status >= 200 && xhr.status < 300 && (data.attachment || data.data)) {
           resolve(data.attachment || data.data);
         } else {
-          reject(new Error(data.message || "Upload failed"));
+          reject(new Error(errorMessage(data, xhr.status) || "Upload failed"));
         }
       });
 

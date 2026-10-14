@@ -7,6 +7,12 @@ import { sanitizeSiteSettings } from "../utils/cmsValidation.js";
 
 const router = express.Router();
 
+// Read-only variant for the public endpoint: never inserts on GET.
+async function getSettingsForRead() {
+  const existing = await SiteSettings.findOne().sort({ createdAt: -1 });
+  return existing || new SiteSettings({});
+}
+
 async function getOrCreateSettings() {
   const existing = await SiteSettings.findOne().sort({ createdAt: -1 });
   if (existing) return existing;
@@ -36,7 +42,7 @@ function formatLeadershipResponse(settings) {
 // GET /api/leadership - Public endpoint for leadership profiles
 router.get("/", async (req, res, next) => {
   try {
-    const settings = await getOrCreateSettings();
+    const settings = await getSettingsForRead();
     res.json({
       success: true,
       data: formatLeadershipResponse(settings),

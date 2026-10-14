@@ -22,7 +22,8 @@ const siteSettingsSchema = new mongoose.Schema(
         "An academic institution committed to quality English-medium education from Nursery to Grade 10.",
     },
     address: { type: String, default: "Kaseni, Nepal" },
-    phone: { type: String, default: "+977-XXXXXXXXXX" },
+    // No fake default: an empty phone is hidden on the site until the school enters a real one.
+    phone: { type: String, default: "" },
     email: { type: String, default: "info@kmes.edu.np" },
     facebookUrl: { type: String, default: "https://www.facebook.com/61554117025008" },
     principalName: { type: String, default: "Principal" },

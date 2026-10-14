@@ -13,7 +13,7 @@ const defaultValues = {
   footerDescription:
     "An academic institution committed to quality English-medium education from Nursery to Grade 10.",
   address: "Kaseni, Nepal",
-  phone: "+977-XXXXXXXXXX",
+  phone: "",
   email: "info@kmes.edu.np",
   facebookUrl: "https://www.facebook.com/61554117025008",
   principalName: "Principal",
@@ -69,12 +69,13 @@ function SiteSettingsManager() {
   const load = () => {
     api
       .getAll("site-settings")
-      .then(async (data) => {
+      .then((data) => {
         const items = data.data || [];
+        // Nothing saved yet: show the form with defaults and only create the
+        // record when the admin presses Save (never write on page view).
         if (!items.length) {
-          const created = await api.create("site-settings", defaultValues);
-          setId(created.data?._id || null);
-          setSettings({ ...defaultValues, ...(created.data || {}) });
+          setId(null);
+          setSettings(defaultValues);
           return;
         }
 

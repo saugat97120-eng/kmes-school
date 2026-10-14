@@ -5,7 +5,9 @@ import { api, setSession, isAuthenticated } from "./api";
 function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState(() =>
+    new URLSearchParams(window.location.search).get("expired") ? "Your session expired. Please sign in again." : ""
+  );
   const [loading, setLoading] = useState(false);
   const [isForgot, setIsForgot] = useState(false);
   const [forgotSuccess, setForgotSuccess] = useState("");
@@ -41,7 +43,7 @@ function AdminLogin() {
     try {
       await api.forgotPassword(email);
       setForgotSuccess(
-        "If that email address is registered, a password reset link has been sent to your Gmail inbox. Please check your inbox and spam folder."
+        "If that email address is registered, a password reset link has been sent to that address. Please check your inbox and spam folder."
       );
     } catch (err) {
       setError(err.message || "Failed to send reset email");

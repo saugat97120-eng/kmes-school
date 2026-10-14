@@ -12,9 +12,9 @@ import path from "node:path";
 import fs from "node:fs";
 import { pathToFileURL } from "node:url";
 import { createRequire } from "node:module";
-import { MongoMemoryServer } from "mongodb-memory-server";
+import { createMongo } from "./helpers/mongo.mjs";
 
-const BACKEND_DIR = "C:\\Users\\Dell\\Downloads\\kmes-school-website-updated (2)\\kmes-school\\backend";
+const BACKEND_DIR = path.resolve(import.meta.dirname, "..");
 const require = createRequire(pathToFileURL(path.join(BACKEND_DIR, "package.json")).href);
 const mongoose = require("mongoose");
 
@@ -46,12 +46,8 @@ async function waitForServer() {
   throw new Error("Server did not come up");
 }
 
-const envPath = path.join(BACKEND_DIR, ".env");
-const envOff = envPath + ".phase20b";
-let envHidden = false;
-if (fs.existsSync(envPath)) { fs.renameSync(envPath, envOff); envHidden = true; }
 
-const mongoServer = await MongoMemoryServer.create();
+const mongoServer = await createMongo();
 const uri = mongoServer.getUri();
 
 process.env.MONGODB_URI = uri;
@@ -74,12 +70,12 @@ process.env.ADMIN_BOOTSTRAP_EMAIL = "saugatb40@gmail.com";
 
 // Confirm EMPTY database before server boots.
 await mongoose.connect(uri);
-const User = (await import(pathToFileURL(path.join(BACKEND_DIR, "src\\models\\User.js")).href)).default;
+const User = (await import(pathToFileURL(path.join(BACKEND_DIR, "src/models/User.js")).href)).default;
 const startCount = await User.countDocuments();
 await mongoose.disconnect();
 check("harness: database starts EMPTY", startCount === 0, `count=${startCount}`);
 
-await import(pathToFileURL(path.join(BACKEND_DIR, "src\\server.js")).href);
+await import(pathToFileURL(path.join(BACKEND_DIR, "src/server.js")).href);
 await waitForServer();
 
 // ---------- A. CONCURRENCY: N simultaneous bootstraps = exactly one admin ----------
@@ -123,7 +119,6 @@ check("login exposes admin role", login.data.user && login.data.user.role === "a
 
 // ---------- RESTORE ----------
 await mongoServer.stop();
-if (envHidden) fs.renameSync(envOff, envPath);
 
 console.log(`\n-------------`);
 console.log(`PASS ${passed}`);

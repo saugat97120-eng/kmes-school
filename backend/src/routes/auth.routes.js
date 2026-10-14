@@ -296,18 +296,19 @@ router.post(
 // POST /api/auth/login
 router.post(
   "/login",
-  [body("email").isEmail(), body("password").notEmpty()],
+  [body("email").isString().trim().isEmail(), body("password").isString().notEmpty()],
   async (req, res, next) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({ success: false, errors: errors.array() });
       }
-      let user = await User.findOne({ email: req.body.email }).select("+password");
+      const loginEmail = String(req.body.email).trim().toLowerCase();
+      let user = await User.findOne({ email: loginEmail }).select("+password");
 
       if (!user) {
         const developmentAdmin = await ensureDevelopmentAdminUser();
-        if (developmentAdmin && developmentAdmin.email === req.body.email.toLowerCase()) {
+        if (developmentAdmin && developmentAdmin.email === loginEmail) {
           user = developmentAdmin;
         }
       }

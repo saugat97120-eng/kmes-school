@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { MapPin, Phone, Mail, Share2, Clock } from "lucide-react";
 import { useSiteSettings } from "../../context/useSiteSettings";
+import { isPlaceholder } from "../../utils/format";
 
 function Footer() {
   const { settings } = useSiteSettings();
@@ -49,12 +50,12 @@ function Footer() {
                   <MapPin size={16} className="mt-0.5 shrink-0" /> {settings.address}
                 </span>
               )}
-              {settings.phone && (
+              {!isPlaceholder(settings.phone) && (
                 <span className="flex items-center gap-2">
                   <Phone size={16} /> {settings.phone}
                 </span>
               )}
-              {settings.email && (
+              {!isPlaceholder(settings.email) && (
                 <span className="flex items-center gap-2">
                   <Mail size={16} /> {settings.email}
                 </span>

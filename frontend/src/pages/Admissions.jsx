@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { API_BASE } from "../config";
 import PageHeader from "../components/common/PageHeader";
 import Container from "../components/common/Container";
 import Button from "../components/common/Button";
@@ -22,7 +23,7 @@ function Admissions() {
   useEffect(() => {
     const loadPage = async () => {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || "http://localhost:5000"}/api/page-content?slug=admissions`);
+        const res = await fetch(`${API_BASE}/api/page-content?slug=admissions`);
         const data = await res.json();
         if (data?.success && data.data) {
           setPage({ ...defaultPage, ...data.data });

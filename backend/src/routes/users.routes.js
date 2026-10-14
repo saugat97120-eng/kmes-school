@@ -6,6 +6,7 @@ import { requirePermission, PERMISSIONS } from "../middleware/roles.js";
 import { logActivity } from "../utils/logActivity.js";
 
 const router = express.Router();
+const isEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) && value.length <= 254;
 
 // User-management is an administrative concern (users.manage is admin-derived,
 // so editors can never reach these handlers). We never trust request-body
@@ -61,7 +62,7 @@ router.post(
         return res.status(400).json({ success: false, errors: errors.array() });
       }
 
-      const existing = await User.findOne({ email: req.body.email });
+      const existing = await User.findOne({ email: String(req.body.email).toLowerCase().trim() });
       if (existing) {
         return res.status(409).json({ success: false, message: "Email already registered" });
       }
@@ -100,9 +101,26 @@ router.put("/:id", async (req, res, next) => {
 
     // Only whitelisted fields. role is the only privilege field and is only
     // honored because this handler is admin-gated.
-    if (name !== undefined && String(name).trim()) update.name = String(name).trim();
-    if (email !== undefined && String(email).trim()) update.email = String(email).trim().toLowerCase();
-    if (password !== undefined && String(password).length) update.password = password;
+    if (name !== undefined && String(name).trim()) {
+      if (String(name).trim().length > 100) {
+        return res.status(400).json({ success: false, message: "Name must be 100 characters or fewer." });
+      }
+      update.name = String(name).trim();
+    }
+    if (email !== undefined && String(email).trim()) {
+      const nextEmail = String(email).trim().toLowerCase();
+      if (!isEmail(nextEmail)) {
+        return res.status(400).json({ success: false, message: "A valid email is required." });
+      }
+      update.email = nextEmail;
+    }
+    if (password !== undefined && String(password).length) {
+      // Same minimum as account creation and password reset.
+      if (typeof password !== "string" || password.length < 6) {
+        return res.status(400).json({ success: false, message: "Password must be at least 6 characters." });
+      }
+      update.password = password;
+    }
 
     if (role !== undefined) {
       const validRole = role === "admin" ? "admin" : "editor";
@@ -131,7 +149,18 @@ router.put("/:id", async (req, res, next) => {
       }
     }
 
+    if (update.email && update.email !== user.email) {
+      const taken = await User.exists({ email: update.email, _id: { $ne: user._id } });
+      if (taken) {
+        return res.status(409).json({ success: false, message: "Email already registered" });
+      }
+    }
+
+    // A password or role change must end existing sessions of that user.
+    const endSessions = Boolean(update.password) || (update.role && update.role !== user.role);
+
     Object.assign(user, update);
+    if (endSessions) user.authVersion = (user.authVersion || 0) + 1;
     await user.save();
 
     await logActivity({

@@ -11,7 +11,7 @@ export const siteSettingsDefaults = {
   footerDescription:
     "An academic institution committed to quality English-medium education from Nursery to Grade 10.",
   address: "Kaseni, Nepal",
-  phone: "+977-XXXXXXXXXX",
+  phone: "",
   email: "info@kmes.edu.np",
   facebookUrl: "https://www.facebook.com/61554117025008",
   principalName: "Principal",

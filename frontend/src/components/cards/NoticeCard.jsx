@@ -1,5 +1,6 @@
 import { CalendarDays, ArrowRight, Pin } from "lucide-react";
 import { Link } from "react-router-dom";
+import { formatDate } from "../../utils/format";
 
 function NoticeCard({ notice }) {
   return (
@@ -11,14 +12,14 @@ function NoticeCard({ notice }) {
         {notice.pinned && <Pin size={18} className="text-gold" />}
       </div>
       <p className="mt-5 text-xs font-semibold uppercase tracking-wider text-gray-500">
-        {notice.date}
+        {formatDate(notice.date) || notice.date}
       </p>
       <h3 className="mt-2 font-serif text-xl font-bold text-navy">{notice.title}</h3>
       <p className="mt-3 line-clamp-3 text-sm leading-6 text-gray-600">
         {notice.description}
       </p>
       <Link
-        to={`/notices/${notice.id}`}
+        to={`/notices/${notice._id || notice.id}`}
         className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-navy hover:text-gold"
       >
         Read More <ArrowRight size={16} />
