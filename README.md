@@ -17,7 +17,11 @@ kmes-school/
 │   ├── src/                  # Components, public pages, admin CMS, contexts, hooks
 │   └── dist/                 # Production-optimized static output
 ├── backup/                   # Point-in-time JSON database snapshots
-└── docs/                     # Disaster-recovery runbook + restore checklists
+└── docs/                     # Operations, integrations, and deployment documentation
+    ├── FACEBOOK_INTEGRATION_GUIDE.md  # Complete Meta Graph API Page integration & publishing guide
+    ├── DEPLOYMENT.md                  # Vercel & Render production operations guide
+    ├── PRODUCTION_RUNBOOK.md          # Operator maintenance & daily procedures
+    └── DISASTER_RECOVERY.md           # Database failover & point-in-time recovery
 ```
 
 ---
