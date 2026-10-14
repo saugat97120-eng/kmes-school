@@ -4,10 +4,16 @@ const activityLogSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     userName: { type: String, default: "System" },
+    userEmail: { type: String, default: null },
+    userRole: { type: String, default: null },
+    ip: { type: String, default: null },
+    userAgent: { type: String, default: null },
     action: {
       type: String,
       enum: [
         "login",
+        "login_failed",
+        "account_locked",
         "create",
         "update",
         "delete",

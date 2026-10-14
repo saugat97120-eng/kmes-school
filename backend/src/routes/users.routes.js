@@ -32,6 +32,9 @@ function publicUser(user) {
     name: user.name,
     email: user.email,
     role: user.role,
+    isLocked: Boolean(user.lockUntil && user.lockUntil > new Date()),
+    lockUntil: user.lockUntil,
+    failedLoginAttempts: user.failedLoginAttempts || 0,
     createdAt: user.createdAt,
   };
 }
@@ -161,6 +164,13 @@ router.put("/:id", async (req, res, next) => {
 
     Object.assign(user, update);
     if (endSessions) user.authVersion = (user.authVersion || 0) + 1;
+
+    // Phase 22: allow an administrator to explicitly unlock an account or lift lockout on password reset
+    if (req.body.unlock || update.password) {
+      user.failedLoginAttempts = 0;
+      user.lockUntil = null;
+    }
+
     await user.save();
 
     await logActivity({
@@ -169,6 +179,7 @@ router.put("/:id", async (req, res, next) => {
       resource: "users",
       resourceId: user._id.toString(),
       resourceLabel: `${user.name} (${user.role})`,
+      meta: req.body.unlock ? { unlocked: true } : undefined,
     });
 
     res.json({ success: true, data: publicUser(user) });

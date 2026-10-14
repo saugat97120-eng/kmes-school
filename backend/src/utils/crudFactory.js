@@ -262,66 +262,74 @@ export function crudFactory(Model, resourceName, options = {}) {
 
     create: async (req, res, next) => {
       try {
-       const body = prepareBody(req.body);
+        const body = prepareBody(req.body);
 
-       // Strip any client-authored workflow fields (status/published/metadata)
-       // and always create as a DRAFT. Publication only happens via the workflow.
-       const safeBody = { ...stripWorkflowFields(body), ...initialWorkflowState(body) };
+        // Strip any client-authored workflow fields (status/published/metadata)
+        // and always create as a DRAFT. Publication only happens via the workflow.
+        const safeBody = { ...stripWorkflowFields(body), ...initialWorkflowState(body) };
+        if (req?.user?.id) {
+          safeBody.createdBy = req.user.id;
+          safeBody.createdByName = req.user.name;
+        }
 
-       const item = await Model.create(safeBody);
-       await logActivity({
-         req,
-         action: "create",
-         resource: resourceName,
-         resourceId: item._id.toString(),
-         resourceLabel: item[labelField],
-       });
-       res.status(201).json({ success: true, data: item });
-     } catch (err) {
-       next(err);
-     }
+        const item = await Model.create(safeBody);
+        await logActivity({
+          req,
+          action: "create",
+          resource: resourceName,
+          resourceId: item._id.toString(),
+          resourceLabel: item[labelField],
+        });
+        res.status(201).json({ success: true, data: item });
+      } catch (err) {
+        next(err);
+      }
     },
 
     update: async (req, res, next) => {
-     try {
-       const existing = await Model.findOne({ _id: req.params.id, deletedAt: null });
-       if (!existing) {
-         return res.status(404).json({ success: false, message: "Not found" });
-       }
-       const body = prepareBody(req.body, existing);
+      try {
+        const existing = await Model.findOne({ _id: req.params.id, deletedAt: null });
+        if (!existing) {
+          return res.status(404).json({ success: false, message: "Not found" });
+        }
+        const body = prepareBody(req.body, existing);
 
-       // Phase 7 edit rule: a client may edit field content, but never the
-       // workflow state. Strip all workflow fields from the payload.
-       const safeBody = stripWorkflowFields(body);
+        // Phase 7 edit rule: a client may edit field content, but never the
+        // workflow state. Strip all workflow fields from the payload.
+        const safeBody = stripWorkflowFields(body);
 
-       // Editing any non-draft content resets it to DRAFT so no change to
-       // approved/published content can go live without re-review. Pending
-       // review content is not editable through CRUD until it returns to draft.
-       const set = { ...safeBody };
-       if (resolveStatus(existing) !== WORKFLOW_STATUS.DRAFT) {
-         set.status = WORKFLOW_STATUS.DRAFT;
-         set.published = false;
-       }
+        // Editing any non-draft content resets it to DRAFT so no change to
+        // approved/published content can go live without re-review. Pending
+        // review content is not editable through CRUD until it returns to draft.
+        const set = { ...safeBody };
+        if (resolveStatus(existing) !== WORKFLOW_STATUS.DRAFT) {
+          set.status = WORKFLOW_STATUS.DRAFT;
+          set.published = false;
+        }
+        if (req?.user?.id) {
+          set.updatedBy = req.user.id;
+          set.updatedByName = req.user.name;
+        }
 
-       const item = await Model.findOneAndUpdate(
-         { _id: req.params.id, deletedAt: null },
-         set,
-         { new: true, runValidators: true }
-       );
-       if (!item) {
-         return res.status(404).json({ success: false, message: "Not found" });
-       }
-       await logActivity({
-         req,
-         action: "update",
-         resource: resourceName,
-         resourceId: item._id.toString(),
-         resourceLabel: item[labelField],
-       });
-       res.json({ success: true, data: item });
-     } catch (err) {
-       next(err);
-     }
+        const item = await Model.findOneAndUpdate(
+          { _id: req.params.id, deletedAt: null },
+          set,
+          { new: true, runValidators: true }
+        );
+        if (!item) {
+          return res.status(404).json({ success: false, message: "Not found" });
+        }
+        await logActivity({
+          req,
+          action: "update",
+          resource: resourceName,
+          resourceId: item._id.toString(),
+          resourceLabel: item[labelField],
+        });
+        res.json({ success: true, data: item });
+      } catch (err) {
+        next(err);
+      }
     },
 
     // Soft delete -> moves the item to trash instead of removing it
@@ -329,7 +337,10 @@ export function crudFactory(Model, resourceName, options = {}) {
       try {
         const item = await Model.findOneAndUpdate(
           { _id: req.params.id, deletedAt: null },
-          { deletedAt: new Date() },
+          {
+            deletedAt: new Date(),
+            ...(req?.user?.id ? { deletedBy: req.user.id, deletedByName: req.user.name } : {}),
+          },
           { new: true }
         );
         if (!item) {

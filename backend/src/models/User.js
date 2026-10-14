@@ -15,6 +15,9 @@ const userSchema = new mongoose.Schema(
     // Bumped on every successful password reset so previously issued JWTs no
     // longer authenticate. Default 0 keeps existing accounts/sessions working.
     authVersion: { type: Number, default: 0 },
+    // Phase 22: Account lockout protection (5 failed attempts = 15-minute cool-down)
+    failedLoginAttempts: { type: Number, default: 0 },
+    lockUntil: { type: Date, default: null },
   },
   { timestamps: true }
 );
@@ -26,6 +29,11 @@ userSchema.pre("save", async function () {
 
 userSchema.methods.comparePassword = function (candidate) {
   return bcrypt.compare(candidate, this.password);
+};
+
+// Check if account is currently locked out
+userSchema.methods.isLocked = function () {
+  return Boolean(this.lockUntil && this.lockUntil > new Date());
 };
 
 // Invalidate every previously issued JWT for this user by advancing the auth

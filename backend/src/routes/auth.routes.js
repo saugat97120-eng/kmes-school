@@ -21,6 +21,7 @@ import {
   tryAcquireBootstrapLock,
   releaseBootstrapLock,
 } from "../utils/adminBootstrap.js";
+import { logActivity } from "../utils/logActivity.js";
 
 const router = express.Router();
 
@@ -66,7 +67,7 @@ async function ensureDevelopmentAdminUser() {
 
 function signToken(user) {
   return jwt.sign(
-    { id: user._id, role: user.role, name: user.name, authVersion: user.authVersion || 0 },
+    { id: user._id, role: user.role, name: user.name, email: user.email, authVersion: user.authVersion || 0 },
     process.env.JWT_SECRET,
     { expiresIn: "7d" }
   );
@@ -321,9 +322,89 @@ router.post(
         ? await user.comparePassword(req.body.password)
         : await bcrypt.compare(String(req.body.password), DUMMY_HASH);
 
+      // Check if account is currently locked out
+      if (user && user.isLocked && user.isLocked()) {
+        const remainingMinutes = Math.max(1, Math.ceil((user.lockUntil.getTime() - Date.now()) / (60 * 1000)));
+        await logActivity({
+          req: { ...req, user: { id: user._id, name: user.name, email: user.email, role: user.role } },
+          action: "account_locked",
+          resource: "auth",
+          resourceId: user._id.toString(),
+          resourceLabel: `${user.name} (${user.email})`,
+          meta: { reason: "account_currently_locked", remainingMinutes },
+        });
+        return res.status(423).json({
+          success: false,
+          locked: true,
+          message: `Account is temporarily locked due to 5 consecutive failed login attempts. Please try again in ${remainingMinutes} minute(s).`,
+        });
+      }
+
       if (!user || !passwordValid) {
+        if (user) {
+          // If a previous lock has expired, reset counter before counting this new failure
+          if (user.lockUntil && user.lockUntil <= new Date()) {
+            user.failedLoginAttempts = 0;
+            user.lockUntil = null;
+          }
+
+          user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
+
+          if (user.failedLoginAttempts >= 5) {
+            user.lockUntil = new Date(Date.now() + 15 * 60 * 1000); // 15-minute cool-down
+            await user.save({ validateBeforeSave: false });
+
+            await logActivity({
+              req: { ...req, user: { id: user._id, name: user.name, email: user.email, role: user.role } },
+              action: "account_locked",
+              resource: "auth",
+              resourceId: user._id.toString(),
+              resourceLabel: `${user.name} (${user.email})`,
+              meta: { reason: "max_failed_attempts_reached", lockUntil: user.lockUntil },
+            });
+
+            return res.status(423).json({
+              success: false,
+              locked: true,
+              message: "Account is temporarily locked due to 5 consecutive failed login attempts. Please try again in 15 minutes.",
+            });
+          }
+
+          await user.save({ validateBeforeSave: false });
+
+          await logActivity({
+            req: { ...req, user: { id: user._id, name: user.name, email: user.email, role: user.role } },
+            action: "login_failed",
+            resource: "auth",
+            resourceId: user._id.toString(),
+            resourceLabel: `${user.name} (${user.email})`,
+            meta: { failedAttempts: user.failedLoginAttempts, remainingAttempts: 5 - user.failedLoginAttempts },
+          });
+
+          return res.status(401).json({
+            success: false,
+            message: `Invalid credentials. ${5 - user.failedLoginAttempts} attempt(s) remaining before account lockout.`,
+          });
+        }
+
         return res.status(401).json({ success: false, message: "Invalid credentials" });
       }
+
+      // Successful authentication: clear failure counters and lift any expired locks
+      if (user.failedLoginAttempts > 0 || user.lockUntil) {
+        user.failedLoginAttempts = 0;
+        user.lockUntil = null;
+        await user.save({ validateBeforeSave: false });
+      }
+
+      await logActivity({
+        req: { ...req, user: { id: user._id, name: user.name, email: user.email, role: user.role } },
+        action: "login",
+        resource: "auth",
+        resourceId: user._id.toString(),
+        resourceLabel: `${user.name} (${user.role})`,
+      });
+
       res.json({
         success: true,
         token: signToken(user),

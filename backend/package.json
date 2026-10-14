@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
-    "test": "node tests/phase-18c.unit.mjs && node tests/phase-18c.integration.mjs && node tests/phase-21.regression.mjs",
+    "test": "node tests/phase-18c.unit.mjs && node tests/phase-18c.integration.mjs && node tests/phase-21.regression.mjs && node tests/security-lockout-audit.test.mjs",
+    "test:security": "node tests/security-lockout-audit.test.mjs",
     "test:unit": "node tests/phase-18c.unit.mjs",
     "test:integration": "node tests/phase-18c.integration.mjs",
     "test:foundation": "node tests/deployment-foundation.test.mjs",

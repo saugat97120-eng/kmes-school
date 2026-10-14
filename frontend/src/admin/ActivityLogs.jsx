@@ -16,17 +16,25 @@ const actionVerbs = {
   user_delete: "removed user",
   settings_update: "updated site settings",
   login: "logged in",
+  login_failed: "failed login",
+  account_locked: "account locked",
 };
 
 const actionColors = {
-  create: "bg-green-50 text-green-700",
-  update: "bg-blue-50 text-blue-700",
-  delete: "bg-red-50 text-red-600",
-  restore: "bg-amber-50 text-amber-700",
-  permanent_delete: "bg-red-100 text-red-700",
-  publish: "bg-green-50 text-green-700",
-  unpublish: "bg-gray-100 text-gray-600",
-  upload: "bg-purple-50 text-purple-700",
+  create: "bg-green-50 text-green-700 border border-green-200",
+  update: "bg-blue-50 text-blue-700 border border-blue-200",
+  delete: "bg-red-50 text-red-600 border border-red-200",
+  restore: "bg-amber-50 text-amber-700 border border-amber-200",
+  permanent_delete: "bg-red-100 text-red-700 border border-red-300",
+  publish: "bg-green-50 text-green-700 border border-green-200",
+  unpublish: "bg-gray-100 text-gray-600 border border-gray-200",
+  upload: "bg-purple-50 text-purple-700 border border-purple-200",
+  user_create: "bg-emerald-50 text-emerald-800 border border-emerald-200",
+  user_update: "bg-cyan-50 text-cyan-800 border border-cyan-200",
+  user_delete: "bg-rose-50 text-rose-800 border border-rose-200",
+  login: "bg-indigo-50 text-indigo-700 border border-indigo-200",
+  login_failed: "bg-amber-100 text-amber-800 border border-amber-300",
+  account_locked: "bg-red-200 text-red-900 border border-red-400 font-bold",
 };
 
 function ActivityLogs() {
@@ -35,26 +43,58 @@ function ActivityLogs() {
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
+  const [resourceFilter, setResourceFilter] = useState("all");
 
   useEffect(() => {
+    setLoading(true);
+    const params = { page, limit: 30 };
+    if (resourceFilter !== "all") {
+      params.resource = resourceFilter;
+    }
     api
-      .getActivityLogs({ page, limit: 30 })
+      .getActivityLogs(params)
       .then((data) => {
         setLogs(data.data || []);
         setPages(data.pages || 1);
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, [page]);
+  }, [page, resourceFilter]);
 
   return (
     <div>
       <h1 className="flex items-center gap-2 font-serif text-2xl font-bold text-navy">
-        <ScrollText size={22} /> Activity Logs
+        <ScrollText size={22} /> Audit & Activity Logs
       </h1>
       <p className="mt-1 text-sm text-gray-500">
-        A record of every create, update, delete, and publish action taken by admins and editors.
+        A permanent audit trail of every creation, edit, deletion, user update, and login attempt.
       </p>
+
+      {/* Filter Tabs */}
+      <div className="mt-4 flex flex-wrap gap-2">
+        {[
+          { id: "all", label: "All Activities" },
+          { id: "notices", label: "Notices Audit" },
+          { id: "users", label: "Users Audit" },
+          { id: "auth", label: "Security & Logins" },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => {
+              setResourceFilter(tab.id);
+              setPage(1);
+            }}
+            className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition ${
+              resourceFilter === tab.id
+                ? "bg-navy text-white shadow-sm"
+                : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
       {error && (
         <div className="mt-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div>
@@ -82,18 +122,35 @@ function ActivityLogs() {
                   <td className="whitespace-nowrap px-5 py-3 text-xs text-gray-500">
                     {new Date(log.createdAt).toLocaleString()}
                   </td>
-                  <td className="px-5 py-3 font-semibold text-navy">{log.userName}</td>
+                  <td className="px-5 py-3">
+                    <div className="font-semibold text-navy">{log.userName}</div>
+                    <div className="flex items-center gap-1.5 text-[11px] text-gray-400">
+                      {log.userRole && (
+                        <span className="rounded bg-gray-100 px-1.5 py-0.5 font-medium uppercase text-gray-600">
+                          {log.userRole}
+                        </span>
+                      )}
+                      {log.ip && <span>IP: {log.ip}</span>}
+                    </div>
+                  </td>
                   <td className="px-5 py-3">
                     <span
-                      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                      className={`inline-block rounded-full px-2.5 py-1 text-xs font-semibold ${
                         actionColors[log.action] || "bg-gray-100 text-gray-600"
                       }`}
                     >
                       {actionVerbs[log.action] || log.action}
                     </span>
                   </td>
-                  <td className="px-5 py-3 text-gray-600">{log.resource}</td>
-                  <td className="px-5 py-3 text-gray-600">{log.resourceLabel || "—"}</td>
+                  <td className="px-5 py-3 text-gray-600 capitalize">{log.resource}</td>
+                  <td className="px-5 py-3 text-gray-600">
+                    <div className="font-medium text-gray-800">{log.resourceLabel || "—"}</div>
+                    {log.meta?.reason && (
+                      <div className="text-[11px] text-amber-700">
+                        {log.meta.reason}
+                      </div>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

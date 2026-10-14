@@ -28,6 +28,13 @@ const noticeSchema = new mongoose.Schema(
     attachments: [attachmentSchema],
     published: { type: Boolean, default: true },
     deletedAt: { type: Date, default: null },
+    // Phase 22: User audit tracking
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    createdByName: { type: String },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    updatedByName: { type: String },
+    deletedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    deletedByName: { type: String },
     ...contentWorkflowFields,
   },
   { timestamps: true }

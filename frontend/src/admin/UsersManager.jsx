@@ -48,6 +48,15 @@ function UsersManager() {
     }
   };
 
+  const handleUnlock = async (id) => {
+    try {
+      await api.updateUser(id, { unlock: true });
+      load();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   const handleDelete = async (id) => {
     if (!confirm("Remove this user's access? They will no longer be able to log in.")) return;
     try {
@@ -96,7 +105,23 @@ function UsersManager() {
               {users.map((u) => (
                 <tr key={uid(u)}>
                   <td className="px-5 py-3 text-navy">
-                    {u.name} {uid(u) === currentUser?.id && <span className="text-xs text-gray-400">(you)</span>}
+                    <div className="font-medium">
+                      {u.name} {uid(u) === currentUser?.id && <span className="text-xs text-gray-400">(you)</span>}
+                    </div>
+                    {u.isLocked && (
+                      <div className="mt-1 flex items-center gap-2">
+                        <span className="inline-block rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold text-red-800">
+                          Locked (Cool-down)
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleUnlock(uid(u))}
+                          className="text-xs font-semibold text-navy hover:underline"
+                        >
+                          Unlock Now
+                        </button>
+                      </div>
+                    )}
                   </td>
                   <td className="px-5 py-3 text-gray-600">{u.email}</td>
                   <td className="px-5 py-3">
