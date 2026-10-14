@@ -4,7 +4,7 @@
   "description": "Backend API for Kaseni Model Secondary English School website",
   "main": "src/server.js",
   "scripts": {
-    "dev": "nodemon src/server.js",
+    "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "test": "node tests/phase-18c.unit.mjs && node tests/phase-18c.integration.mjs && node tests/phase-21.regression.mjs",
     "test:unit": "node tests/phase-18c.unit.mjs",
@@ -37,8 +37,7 @@
     "nodemailer": "^10.0.0"
   },
   "devDependencies": {
-    "mongodb-memory-server": "^11.2.0",
-    "nodemon": "^3.1.14"
+    "mongodb-memory-server": "^11.2.0"
   },
   "type": "module"
 }
