@@ -121,9 +121,19 @@ router.post(
             resetToken,
             resetClientUrl: buildResetLink(resetToken),
           });
+          if (env.emailProvider === "mock" || !process.env.SMTP_HOST) {
+            console.log(`\n======================================================`);
+            console.log(`[PASSWORD RESET LINK GENERATED]`);
+            console.log(`To: ${email}`);
+            console.log(`Link: ${buildResetLink(resetToken)}`);
+            console.log(`NOTE: Real Gmail delivery requires EMAIL_PROVIDER=smtp and Gmail SMTP credentials in Render.`);
+            console.log(`======================================================\n`);
+          }
         } catch (err) {
           console.error("Password reset email delivery failed:", err.message);
         }
+      } else {
+        console.warn(`[PASSWORD RESET] Request received for UNREGISTERED email: ${email}`);
       }
 
       return res.status(200).json(GENERIC_RESET_RESPONSE);

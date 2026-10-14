@@ -84,8 +84,13 @@ function AdminLogin() {
             />
 
             {forgotSuccess && (
-              <div className="rounded-md border border-green-200 bg-green-50 p-3 text-xs leading-relaxed text-green-800">
-                {forgotSuccess}
+              <div className="space-y-2">
+                <div className="rounded-md border border-green-200 bg-green-50 p-3 text-xs leading-relaxed text-green-800">
+                  {forgotSuccess}
+                </div>
+                <div className="rounded-md border border-amber-200 bg-amber-50 p-2.5 text-[11px] leading-relaxed text-amber-800">
+                  <span className="font-semibold">Didn&apos;t receive it?</span> Check your spam folder. If real Gmail delivery is not yet enabled on your server, administrators can also view the generated link directly in the Render backend logs.
+                </div>
               </div>
             )}
 
