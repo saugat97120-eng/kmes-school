@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { NavLink, useNavigate, Outlet } from "react-router-dom";
-import { UserButton, Show } from "@clerk/react";
+import { UserButton, OrganizationSwitcher, Show } from "@clerk/react";
 import {
   LayoutDashboard,
   Megaphone,
@@ -236,6 +236,12 @@ function AdminLayout() {
         <div className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-3 text-sm text-gray-500">
           <div className="flex items-center gap-3">
             <Show when="signed-in">
+              <OrganizationSwitcher
+                hidePersonal={false}
+                afterCreateOrganizationUrl="/admin"
+                afterLeaveOrganizationUrl="/admin"
+                afterSelectOrganizationUrl="/admin"
+              />
               <UserButton />
             </Show>
             <span>

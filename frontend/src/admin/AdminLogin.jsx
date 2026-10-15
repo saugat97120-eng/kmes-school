@@ -44,8 +44,7 @@ function ClerkLoginSection({ onSyncSuccess, onError }) {
       <SignInButton mode="modal">
         <button
           type="button"
-          disabled={syncingRef.current}
-          className="flex w-full items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-xs transition hover:bg-gray-50 focus:outline-none disabled:opacity-60 cursor-pointer"
+          className="flex w-full items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-xs transition hover:bg-gray-50 focus:outline-none cursor-pointer"
         >
           <svg className="h-4 w-4" viewBox="0 0 24 24">
             <path
