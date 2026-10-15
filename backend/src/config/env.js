@@ -119,6 +119,13 @@ export const env = {
   // Clerk authentication
   clerkPublishableKey: process.env.CLERK_PUBLISHABLE_KEY || "",
   clerkSecretKey: process.env.CLERK_SECRET_KEY || "",
+
+  // Cloudflare R2 Storage (S3-compatible)
+  r2AccountId: process.env.R2_ACCOUNT_ID || "a4556a7dd2c35190a791424061384ece",
+  r2AccessKeyId: process.env.R2_ACCESS_KEY_ID || "",
+  r2SecretAccessKey: process.env.R2_SECRET_ACCESS_KEY || "",
+  r2BucketName: process.env.R2_BUCKET_NAME || "kmes-school-media",
+  r2PublicUrl: process.env.R2_PUBLIC_URL || "https://media.kmes.com.np",
 };
 
 // Validate critical production configuration. Returns an array of generic

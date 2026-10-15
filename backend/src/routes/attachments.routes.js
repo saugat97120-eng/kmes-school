@@ -1,5 +1,6 @@
 import express from "express";
 import cloudinary, { isCloudinaryConfigured, CLOUDINARY_FOLDERS } from "../config/cloudinary.js";
+import { isR2Configured, uploadToR2, deleteFromR2, R2_FOLDERS } from "../config/r2.js";
 import { WORKFLOW_STATUS } from "../workflow/workflow.js";
 import { resolveStatus } from "../workflow/workflowService.js";
 import { destroyAsset, isPublicIdInUse } from "../utils/cloudinaryCleanup.js";
@@ -48,10 +49,10 @@ router.post(
   validateAttachmentFile,
   async (req, res, next) => {
     try {
-      if (!isCloudinaryConfigured()) {
+      if (!isR2Configured() && !isCloudinaryConfigured()) {
         return res.status(400).json({
           success: false,
-          message: "Cloudinary is not configured",
+          message: "Storage is not configured (Cloudflare R2 or Cloudinary)",
         });
       }
 
@@ -74,32 +75,45 @@ router.post(
         });
       }
 
-      // Upload to Cloudinary
-      const result = await new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          {
-            folder: `${CLOUDINARY_FOLDERS.attachments}/${resource}`,
-            resource_type: req.fileMetadata.resourceType,
-            public_id: `${Date.now()}_${safePublicIdName(req.file.originalname)}`,
-            overwrite: false,
-          },
-          (error, uploaded) => {
-            if (error) {
-              reject(error);
-              return;
-            }
-            resolve(uploaded);
-          }
-        );
+      let result;
+      const isUsingR2 = isR2Configured();
 
-        stream.end(req.file.buffer);
-      });
+      if (isUsingR2) {
+        result = await uploadToR2({
+          buffer: req.file.buffer,
+          originalname: req.file.originalname,
+          mimetype: req.fileMetadata.mimeType,
+          folder: `${R2_FOLDERS.attachments}/${resource}`,
+        });
+      } else {
+        const uploaded = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            {
+              folder: `${CLOUDINARY_FOLDERS.attachments}/${resource}`,
+              resource_type: req.fileMetadata.resourceType,
+              public_id: `${Date.now()}_${safePublicIdName(req.file.originalname)}`,
+              overwrite: false,
+            },
+            (error, res) => {
+              if (error) return reject(error);
+              resolve(res);
+            }
+          );
+          stream.end(req.file.buffer);
+        });
+        result = {
+          url: uploaded.secure_url,
+          publicId: uploaded.public_id,
+          format: uploaded.format,
+          bytes: uploaded.bytes,
+        };
+      }
 
       // Create attachment object
       const attachment = {
         name: req.fileMetadata.name,
-        url: result.secure_url,
-        publicId: result.public_id,
+        url: result.url,
+        publicId: result.publicId,
         resourceType: req.fileMetadata.resourceType,
         format: result.format || req.fileMetadata.format,
         size: result.bytes || req.fileMetadata.size,
@@ -117,8 +131,12 @@ router.post(
       try {
         await item.save();
       } catch (saveErr) {
-        // Do not leave an orphan file in Cloudinary if the DB write failed.
-        await destroyAsset(result.public_id, req.fileMetadata.resourceType);
+        // Do not leave an orphan file in storage if the DB write failed.
+        if (isUsingR2) {
+          await deleteFromR2(result.key);
+        } else {
+          await destroyAsset(result.publicId, req.fileMetadata.resourceType);
+        }
         throw saveErr;
       }
       // The plain object above has no _id; read the real one from the saved subdocument.
@@ -186,10 +204,15 @@ router.delete("/:resource/:id/:attachmentId", requireAuth, requirePermission(PER
 
     const attachment = item.attachments[attachmentIndex];
 
-    // Only delete the Cloudinary asset if no other notice/event still references it.
+    // Only delete the asset if no other notice/event still references it.
     if (attachment.publicId) {
       const shared = await isPublicIdInUse(attachment.publicId, item._id);
-      if (!shared) await destroyAsset(attachment.publicId, attachment.resourceType);
+      if (!shared) {
+        if (attachment.publicId.startsWith("attachments/") || isR2Configured()) {
+          await deleteFromR2(attachment.publicId);
+        }
+        await destroyAsset(attachment.publicId, attachment.resourceType);
+      }
     }
 
     // Remove from array

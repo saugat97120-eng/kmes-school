@@ -17,6 +17,7 @@ import { WORKFLOW_STATUS } from "../../workflow/workflow.js";
 import { logActivity } from "../../utils/logActivity.js";
 import { CONTENT_TYPES } from "../../utils/inbox.js";
 import cloudinary, { isCloudinaryConfigured } from "../../config/cloudinary.js";
+import { isR2Configured, uploadToR2 } from "../../config/r2.js";
 import FacebookSync from "../../models/FacebookSync.js";
 import {
   FacebookAdapter,
@@ -135,8 +136,8 @@ async function findExisting(targetType, externalId) {
 // Best-effort media import. Text importing first, media failure is recorded but
 // never discards the draft. Returns a safe status string for telemetry.
 async function importMedia(post, Model, docId, now) {
-  if (!isCloudinaryConfigured()) {
-    return { ok: false, skipped: true, reason: "Cloudinary not configured; media skipped." };
+  if (!isR2Configured() && !isCloudinaryConfigured()) {
+    return { ok: false, skipped: true, reason: "Storage not configured; media skipped." };
   }
   if (!Array.isArray(post?.media) || post.media.length === 0) {
     return { ok: true, skipped: true, reason: "No media on this post." };
@@ -157,9 +158,30 @@ async function importMedia(post, Model, docId, now) {
       return { ok: false, reason: check.reason };
     }
 
-    const result = await uploadToCloudinary(buffer, mime);
-    const url = result.secure_url;
-    const publicId = result.public_id;
+    let url;
+    let publicId;
+    let format = "jpg";
+    let bytes = buffer.length;
+
+    if (isR2Configured()) {
+      const ext = mime === "image/png" ? "png" : mime === "image/webp" ? "webp" : "jpg";
+      const uploaded = await uploadToR2({
+        buffer,
+        originalname: `fb-${post.externalId || "post"}.${ext}`,
+        mimetype: mime,
+        folder: "facebook",
+      });
+      url = uploaded.url;
+      publicId = uploaded.publicId;
+      format = uploaded.format;
+      bytes = uploaded.bytes;
+    } else {
+      const uploaded = await uploadToCloudinary(buffer, mime);
+      url = uploaded.secure_url;
+      publicId = uploaded.public_id;
+      format = uploaded.format || "jpg";
+      bytes = uploaded.bytes || buffer.length;
+    }
 
     // Reuse Phase 5B: store as an attachment on the content doc.
     const doc = await Model.findById(docId);

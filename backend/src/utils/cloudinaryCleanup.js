@@ -1,6 +1,7 @@
-// Best-effort Cloudinary cleanup. Failures are logged, never thrown: a leftover
+// Best-effort Cloudinary & Cloudflare R2 cleanup. Failures are logged, never thrown: a leftover
 // orphan file is better than a failed delete for the admin.
 import cloudinary, { isCloudinaryConfigured } from "../config/cloudinary.js";
+import { isR2Configured, deleteFromR2 } from "../config/r2.js";
 import Notice from "../models/Notice.js";
 import Event from "../models/Event.js";
 
@@ -13,7 +14,15 @@ export async function isPublicIdInUse(publicId, excludeId = null) {
 }
 
 export async function destroyAsset(publicId, resourceType = "raw") {
-  if (!publicId || !isCloudinaryConfigured()) return false;
+  if (!publicId) return false;
+  if (isR2Configured() || publicId.startsWith("media/") || publicId.startsWith("attachments/")) {
+    try {
+      await deleteFromR2(publicId);
+    } catch (err) {
+      console.error("R2 cleanup failed:", err.message);
+    }
+  }
+  if (!isCloudinaryConfigured()) return false;
   try {
     await cloudinary.uploader.destroy(publicId, { resource_type: resourceType || "raw" });
     return true;

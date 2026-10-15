@@ -1,6 +1,7 @@
 import express from "express";
 import Media from "../models/Media.js";
 import cloudinary, { isCloudinaryConfigured } from "../config/cloudinary.js";
+import { isR2Configured, deleteFromR2 } from "../config/r2.js";
 import { requireAuth } from "../middleware/auth.js";
 import { requirePermission, PERMISSIONS } from "../middleware/roles.js";
 import { logActivity } from "../utils/logActivity.js";
@@ -47,11 +48,20 @@ router.delete("/:id", requireAuth, requirePermission(PERMISSIONS.MEDIA_DELETE), 
       return res.status(404).json({ success: false, message: "Not found" });
     }
 
-    if (isCloudinaryConfigured()) {
-      try {
-        await cloudinary.uploader.destroy(media.publicId, { resource_type: "image" });
-      } catch (err) {
-        console.error("Cloudinary delete failed:", err.message);
+    if (media.publicId) {
+      if (media.publicId.startsWith("media/") || isR2Configured()) {
+        try {
+          await deleteFromR2(media.publicId);
+        } catch (err) {
+          console.error("R2 delete failed:", err.message);
+        }
+      }
+      if (isCloudinaryConfigured()) {
+        try {
+          await cloudinary.uploader.destroy(media.publicId, { resource_type: "image" });
+        } catch (err) {
+          console.error("Cloudinary delete failed:", err.message);
+        }
       }
     }
 
