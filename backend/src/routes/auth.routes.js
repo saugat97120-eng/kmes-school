@@ -441,4 +441,83 @@ router.get("/me", requireAuth, async (req, res, next) => {
   }
 });
 
+// POST /api/auth/clerk-sync
+// Synchronize Clerk authenticated user with MongoDB user store and return app session
+router.post("/clerk-sync", async (req, res, next) => {
+  try {
+    const rawEmail = req.body.email;
+    const email = rawEmail ? String(rawEmail).trim().toLowerCase() : "";
+    const name = (req.body.name || "School Staff").trim();
+    const clerkUserId = req.body.clerkUserId;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email is required for Clerk synchronization" });
+    }
+
+    let user = await User.findOne({
+      $or: [
+        { email },
+        ...(clerkUserId ? [{ clerkUserId }] : []),
+      ],
+    });
+
+    if (!user) {
+      // First user or authorized admin emails become 'admin', others 'editor'
+      const totalUsers = await User.countDocuments();
+      const isAdminEmail =
+        email === "saugat97120@gmail.com" ||
+        email === "ivanbhattarai042@gmail.com" ||
+        email === env.adminBootstrapEmail.toLowerCase();
+      const role = totalUsers === 0 || isAdminEmail ? "admin" : "editor";
+
+      user = await User.create({
+        name,
+        email,
+        role,
+        clerkUserId: clerkUserId || null,
+        password: crypto.randomBytes(32).toString("hex"),
+      });
+
+      await logActivity({
+        userId: user._id,
+        userName: user.name,
+        action: "create",
+        resourceType: "users",
+        resourceId: user._id,
+        resourceLabel: `${user.name} (${user.role}) [Clerk]`,
+      });
+    } else {
+      let needsSave = false;
+      if (clerkUserId && user.clerkUserId !== clerkUserId) {
+        user.clerkUserId = clerkUserId;
+        needsSave = true;
+      }
+      if (name && name !== "School Staff" && user.name !== name) {
+        user.name = name;
+        needsSave = true;
+      }
+      if (needsSave) {
+        await user.save();
+      }
+    }
+
+    await logActivity({
+      userId: user._id,
+      userName: user.name,
+      action: "login",
+      resourceType: "auth",
+      resourceId: user._id,
+      resourceLabel: `${user.name} (${user.role}) [Clerk Login]`,
+    });
+
+    res.json({
+      success: true,
+      token: signToken(user),
+      user: publicUser(user),
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;

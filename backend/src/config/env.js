@@ -115,6 +115,10 @@ export const env = {
   // admin via public registration. Stored as-is for comparison; the route
   // normalizes to lowercase before matching.
   adminBootstrapEmail: (process.env.ADMIN_BOOTSTRAP_EMAIL || "ivanbhattarai042@gmail.com").trim(),
+
+  // Clerk authentication
+  clerkPublishableKey: process.env.CLERK_PUBLISHABLE_KEY || "",
+  clerkSecretKey: process.env.CLERK_SECRET_KEY || "",
 };
 
 // Validate critical production configuration. Returns an array of generic

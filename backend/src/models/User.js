@@ -18,6 +18,8 @@ const userSchema = new mongoose.Schema(
     // Phase 22: Account lockout protection (5 failed attempts = 15-minute cool-down)
     failedLoginAttempts: { type: Number, default: 0 },
     lockUntil: { type: Date, default: null },
+    // Clerk user ID integration
+    clerkUserId: { type: String, default: null, index: true },
   },
   { timestamps: true }
 );
