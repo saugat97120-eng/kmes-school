@@ -15,7 +15,7 @@ function TopBar() {
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-5">
           {phone && (
-            <a href={`tel:${phone.replace(/[^0-9+]/g, "")}`} className="flex items-center gap-1.5 hover:text-white transition">
+            <a href={`tel:${phone.split(/[,/]/)[0].trim().replace(/[^0-9+]/g, "")}`} className="flex items-center gap-1.5 hover:text-white transition">
               <Phone size={13} className="text-gold" /> {phone}
             </a>
           )}

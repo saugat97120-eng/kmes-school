@@ -39,17 +39,17 @@ async function seed() {
   await SiteSettings.create({});
 
   await Notice.create({
-    title: "Admission Open for New Academic Session",
-    description: "Enquiries now open for Nursery to Grade 10.",
-    content: "Full admission details will be published once confirmed.",
+    title: "Admissions Open for Academic Session 2081/2082",
+    description: "Enrollment is now open for Nursery through Grade 10 at Kaseni Model Secondary English School.",
+    content: "Kaseni Model Secondary English School welcomes applications for Nursery to Grade 10. Forms and prospectus are available at the school administration office in Belbari-05, Kaseni, Morang, or via our online admissions inquiry form on this portal.",
     pinned: true,
   });
 
   await Event.create({
-    title: "Annual Sports Day",
-    description: "Details to be announced.",
-    date: new Date(),
-    location: "School Ground",
+    title: "Annual Sports & Athletic Meet",
+    description: "Annual inter-house athletic competitions including track events, football, volleyball, and fun activities for junior classes.",
+    date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+    location: "KMES School Ground, Belbari-5",
     image: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&q=80",
   });
 
@@ -60,22 +60,40 @@ async function seed() {
   });
 
   await Achievement.create({
-    title: "School Achievement",
-    description: "To be confirmed.",
-    year: "2026",
-    category: "School",
+    title: "Outstanding SEE Academic Performance",
+    description: "KMES students achieved excellent GPA scores in the Secondary Education Examination (SEE) with top divisional honors.",
+    year: "2080 B.S.",
+    category: "Academic",
   });
 
   await Facility.insertMany([
-    { title: "Classrooms", description: "Details to be confirmed." },
-    { title: "Library", description: "Details to be confirmed." },
-    { title: "Computer Lab", description: "Details to be confirmed." },
+    {
+      title: "Spacious Classrooms",
+      description: "Well-ventilated, naturally lit classrooms equipped with modern teaching aids and ergonomic student furniture.",
+    },
+    {
+      title: "Library & Reading Hall",
+      description: "Rich collection of academic textbooks, reference materials, Nepali and English literature, and periodicals.",
+    },
+    {
+      title: "Computer Laboratory",
+      description: "Modern computer lab with high-speed internet providing practical digital literacy and coding education.",
+    },
+    {
+      title: "Science Laboratory",
+      description: "Fully equipped laboratory for hands-on experiments in Physics, Chemistry, and Biology.",
+    },
+    {
+      title: "Playground & Sports Field",
+      description: "Spacious playground accommodating football, volleyball, badminton, and daily physical exercises.",
+    },
   ]);
 
   await Activity.insertMany([
-    { title: "Sports", description: "School sports activities." },
-    { title: "Cultural Programs", description: "Cultural events and celebrations." },
-    { title: "Debate & Quiz", description: "Programs building critical thinking." },
+    { title: "Sports & Athletics", description: "Regular physical training, inter-house football, volleyball tournaments, and track-and-field athletics." },
+    { title: "Cultural & Arts Programs", description: "Annual concerts, traditional dance performances, music, drama, and fine arts exhibitions." },
+    { title: "Debate, Quiz & Public Speaking", description: "Weekly literary competitions, elocution, quiz contests, and spelling bees building student confidence." },
+    { title: "Scouts & Social Service", description: "Community outreach, cleanliness campaigns, and student leadership development programs." },
   ]);
 
   console.log("Seed data inserted.");

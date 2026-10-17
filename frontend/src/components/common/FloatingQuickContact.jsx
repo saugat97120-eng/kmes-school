@@ -7,8 +7,9 @@ function FloatingQuickContact() {
   const { settings } = useSiteSettings();
   const [open, setOpen] = useState(false);
 
-  const phone = !isPlaceholder(settings.phone) ? settings.phone : "+977-9800000000";
-  const cleanPhone = phone.replace(/[^0-9+]/g, "");
+  const phone = !isPlaceholder(settings.phone) ? settings.phone : "+977-9842089044";
+  const primaryPhone = phone.split(/[,/]/)[0].trim();
+  const cleanPhone = primaryPhone.replace(/[^0-9+]/g, "");
   const email = !isPlaceholder(settings.email) ? settings.email : "info@kmes.edu.np";
   const hours = settings.workingHours || "Sun - Fri: 9:00 AM - 4:00 PM";
 
