@@ -98,7 +98,7 @@ function Admissions() {
     try {
       const messagePayload = {
         name: formData.parentName,
-        email: "admissions@kmes.edu.np",
+        email: "ivanbhattarai042@gmail.com",
         phone: formData.phone,
         subject: `[ADMISSION INQUIRY] ${formData.grade} - ${formData.studentName}`,
         message: `Student: ${formData.studentName} (${formData.gender})\nApplying for: ${formData.grade}\nParent/Guardian: ${formData.parentName}\nPhone: ${formData.phone}\nAddress: ${formData.address || "Kaseni"}\nPrevious School: ${formData.previousSchool || "N/A"}\nTracking ID: ${trackingId}`,

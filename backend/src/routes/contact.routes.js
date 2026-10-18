@@ -5,6 +5,7 @@ import ContactMessage from "../models/ContactMessage.js";
 import { requireAuth } from "../middleware/auth.js";
 import { requirePermission, PERMISSIONS } from "../middleware/roles.js";
 import { logActivity } from "../utils/logActivity.js";
+import { sendInquiryNotification } from "../integrations/email/emailService.js";
 
 const router = express.Router();
 
@@ -37,6 +38,12 @@ router.post(
       // visitor could set read/archived/_id/timestamps themselves.
       const { name, email, phone, subject, message } = req.body;
       await ContactMessage.create({ name, email, phone, subject, message });
+
+      // Asynchronously notify school administration (best-effort; non-blocking)
+      sendInquiryNotification({ name, email, phone, subject, message }).catch((err) => {
+        console.warn(`[email] Failed to send inquiry notification: ${err.message}`);
+      });
+
       res.status(201).json({ success: true, message: "Message received" });
     } catch (err) {
       next(err);

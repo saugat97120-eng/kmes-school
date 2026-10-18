@@ -12,7 +12,7 @@ export const siteSettingsDefaults = {
     "An academic institution committed to quality English-medium education from Nursery to Grade 10.",
   address: "Belbari-05, Kaseni, Morang",
   phone: "+977 9842089044, 9817361024",
-  email: "info@kmes.edu.np",
+  email: "ivanbhattarai042@gmail.com",
   facebookUrl: "https://www.facebook.com/61554117025008",
   principalName: "Ivan Bhattarai",
   principalTitle: "Principal",

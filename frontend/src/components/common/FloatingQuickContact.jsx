@@ -10,7 +10,7 @@ function FloatingQuickContact() {
   const phone = !isPlaceholder(settings.phone) ? settings.phone : "+977-9842089044";
   const primaryPhone = phone.split(/[,/]/)[0].trim();
   const cleanPhone = primaryPhone.replace(/[^0-9+]/g, "");
-  const email = !isPlaceholder(settings.email) ? settings.email : "info@kmes.edu.np";
+  const email = !isPlaceholder(settings.email) ? settings.email : "ivanbhattarai042@gmail.com";
   const hours = settings.workingHours || "Sun - Fri: 9:00 AM - 4:00 PM";
 
   // WhatsApp click handler

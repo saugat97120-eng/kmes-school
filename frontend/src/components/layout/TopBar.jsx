@@ -6,7 +6,7 @@ function TopBar() {
   const { settings } = useSiteSettings();
 
   const phone = !isPlaceholder(settings.phone) ? settings.phone : null;
-  const email = !isPlaceholder(settings.email) ? settings.email : "info@kmes.edu.np";
+  const email = !isPlaceholder(settings.email) ? settings.email : "ivanbhattarai042@gmail.com";
   const session = settings.academicSession || "2081/2082 B.S.";
   const established = settings.establishedYear || "Est. 2059 B.S.";
 

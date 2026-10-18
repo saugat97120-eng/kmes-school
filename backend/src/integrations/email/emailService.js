@@ -19,8 +19,9 @@
 //     all required (asserted at boot via assertEmailProviderConfiguration()).
 import { MockEmailAdapter, NoopEmailAdapter } from "./emailAdapter.js";
 import { SmtpEmailAdapter, SMTPServiceError } from "./smtpEmailAdapter.js";
+import { ResendEmailAdapter, ResendServiceError } from "./resendEmailAdapter.js";
 
-const SUPPORTED_PROVIDERS = ["mock", "smtp", "none"];
+const SUPPORTED_PROVIDERS = ["mock", "smtp", "resend", "none"];
 
 let activeConfig = {
   provider: process.env.EMAIL_PROVIDER || "mock",
@@ -29,6 +30,7 @@ let activeConfig = {
 const mockAdapter = new MockEmailAdapter();
 const noopAdapter = new NoopEmailAdapter();
 const smtpAdapter = new SmtpEmailAdapter();
+const resendAdapter = new ResendEmailAdapter();
 
 export function setEmailProviderConfig({ provider }) {
   activeConfig.provider = provider || "mock";
@@ -36,6 +38,7 @@ export function setEmailProviderConfig({ provider }) {
 }
 
 export function getEmailAdapter() {
+  if (activeConfig.provider === "resend") return resendAdapter;
   if (activeConfig.provider === "smtp") return smtpAdapter;
   if (activeConfig.provider === "mock") return mockAdapter;
   return noopAdapter;
@@ -76,6 +79,13 @@ export function assertEmailProviderConfiguration() {
       );
     }
   }
+  if (provider === "resend") {
+    if (!process.env.RESEND_API_KEY) {
+      throw new ResendServiceError(
+        "Resend is not configured. Set RESEND_API_KEY in the backend environment."
+      );
+    }
+  }
   return provider;
 }
 
@@ -101,6 +111,16 @@ export async function sendSecurityNotification({ to, subject, text }) {
   const adapter = getEmailAdapter();
   if (typeof adapter.sendSecurityNotification === "function") {
     return adapter.sendSecurityNotification({ to, subject, text });
+  }
+  return { ok: true, mock: true };
+}
+
+// Deliver a best-effort notification to administration when a new contact inquiry
+// or admission application is submitted on the website.
+export async function sendInquiryNotification({ name, email, phone, subject, message }) {
+  const adapter = getEmailAdapter();
+  if (typeof adapter.sendInquiryNotification === "function") {
+    return adapter.sendInquiryNotification({ name, email, phone, subject, message });
   }
   return { ok: true, mock: true };
 }
