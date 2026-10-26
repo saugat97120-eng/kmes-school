@@ -125,7 +125,7 @@ export const env = {
   r2AccessKeyId: process.env.R2_ACCESS_KEY_ID || "",
   r2SecretAccessKey: process.env.R2_SECRET_ACCESS_KEY || "",
   r2BucketName: process.env.R2_BUCKET_NAME || "kmes-school-media",
-  r2PublicUrl: process.env.R2_PUBLIC_URL || "https://media.kmes.com.np",
+  r2PublicUrl: process.env.R2_PUBLIC_URL || "https://media.kmes.edu.np",
 };
 
 // Validate critical production configuration. Returns an array of generic

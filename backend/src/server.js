@@ -36,10 +36,10 @@ import aiRoutes from "./integrations/ai/ai.routes.js";
 
 const VERCEL_PREVIEW_ORIGIN = /^https:\/\/kmes-school(-[a-z0-9]+)*\.vercel\.app$/;
 const KMES_CUSTOM_DOMAINS = new Set([
-  "https://kmes.com.np",
-  "https://www.kmes.com.np",
-  "http://kmes.com.np",
-  "http://www.kmes.com.np",
+  "https://kmes.edu.np",
+  "https://www.kmes.edu.np",
+  "http://kmes.edu.np",
+  "http://www.kmes.edu.np",
 ]);
 
 

@@ -9,6 +9,7 @@ const HAS_CLERK = Boolean(import.meta.env.VITE_CLERK_PUBLISHABLE_KEY);
 function ClerkLoginSection({ onSyncSuccess, onError }) {
   const { user: clerkUser, isSignedIn } = useUser();
   const syncingRef = useRef(false);
+  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     if (isSignedIn && clerkUser && !syncingRef.current) {
@@ -17,6 +18,7 @@ function ClerkLoginSection({ onSyncSuccess, onError }) {
       const clerkUserId = clerkUser.id;
       if (email) {
         syncingRef.current = true;
+        setSyncing(true);
         fetch(`${API_BASE}/auth/clerk-sync`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -24,6 +26,7 @@ function ClerkLoginSection({ onSyncSuccess, onError }) {
         })
           .then((r) => r.json())
           .then((data) => {
+            setSyncing(false);
             if (data.success && data.token) {
               onSyncSuccess(data.token, data.user);
             } else {
@@ -32,6 +35,7 @@ function ClerkLoginSection({ onSyncSuccess, onError }) {
             }
           })
           .catch((err) => {
+            setSyncing(false);
             onError(err.message || "Network error during Clerk sync");
             syncingRef.current = false;
           });

@@ -63,6 +63,7 @@ export function selectEmailProvider() {
 // production.
 export function assertEmailProviderConfiguration() {
   const provider = selectEmailProvider();
+  activeConfig.provider = provider;
   if (!SUPPORTED_PROVIDERS.includes(provider)) {
     throw new Error(
       `Unsupported EMAIL_PROVIDER '${process.env.EMAIL_PROVIDER}'. Supported: ${SUPPORTED_PROVIDERS.join(", ")}.`

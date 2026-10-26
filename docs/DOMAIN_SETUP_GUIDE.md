@@ -1,6 +1,6 @@
-# KMES School — Custom Domain Setup Guide (`kmes.com.np`)
+# KMES School — Custom Domain Setup Guide (`kmes.edu.np`)
 
-This guide explains how `kmes.com.np` is configured across **Mercantile Communications (register.com.np)**, **Cloudflare DNS**, **Vercel (Frontend)**, and **Render (Backend)**.
+This guide explains how `kmes.edu.np` is configured across **Mercantile Communications (register.com.np)**, **Cloudflare DNS**, **Vercel (Frontend)**, and **Render (Backend)**.
 
 ---
 
@@ -9,14 +9,14 @@ This guide explains how `kmes.com.np` is configured across **Mercantile Communic
 ```
                                       ┌──────────────────────────────────────────────┐
                                       │             Cloudflare DNS Zone              │
-                                      │                (kmes.com.np)                 │
+                                      │                (kmes.edu.np)                 │
                                       └──────────────────────┬───────────────────────┘
                                                              │
                              ┌───────────────────────────────┴───────────────────────────────┐
                              │                                                               │
                              ▼                                                               ▼
                      Apex & WWW Records                                              API Subdomain (Optional)
-               kmes.com.np / www.kmes.com.np                                             api.kmes.com.np
+               kmes.edu.np / www.kmes.edu.np                                             api.kmes.edu.np
                              │                                                               │
                              ▼                                                               ▼
                      ┌───────────────┐                                               ┌───────────────┐
@@ -36,7 +36,7 @@ This guide explains how `kmes.com.np` is configured across **Mercantile Communic
 `.np` domains are provided free of cost by Mercantile Communications and require manual document verification (National ID / Citizenship / School Registration).
 
 1. Log in to [register.com.np](https://register.com.np/).
-2. Check your domain application status for **`kmes.com.np`**:
+2. Check your domain application status for **`kmes.edu.np`**:
    - **Active / Approved**: The domain is live and delegating to your nameservers.
    - **Pending**: Mercantile administrators are reviewing the submitted documents (typically takes 24–48 business hours).
 3. Ensure the Name Servers are set to your Cloudflare nameservers (provided on your Cloudflare dashboard overview page):
@@ -56,7 +56,7 @@ This guide explains how `kmes.com.np` is configured across **Mercantile Communic
 
 | Type | Name | Content / Target | Proxy Status | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| **A** | `@` (or `kmes.com.np`) | `76.76.21.21` | **DNS only (Grey Cloud)** | Points root domain to Vercel edge |
+| **A** | `@` (or `kmes.edu.np`) | `76.76.21.21` | **DNS only (Grey Cloud)** | Points root domain to Vercel edge |
 | **CNAME** | `www` | `cname.vercel-dns.com` | **DNS only (Grey Cloud)** | Points www to Vercel edge |
 | **CNAME** | `api` *(optional)* | `kmes-school-60eq.onrender.com` | Proxied or DNS only | Custom API endpoint for Render backend |
 
@@ -71,8 +71,8 @@ This guide explains how `kmes.com.np` is configured across **Mercantile Communic
 1. Go to your [Vercel Dashboard](https://vercel.com/) -> Select project `kmes-school`.
 2. Navigate to **Settings** -> **Domains**.
 3. Add the following two domains:
-   - `kmes.com.np`
-   - `www.kmes.com.np` (Select redirect to `kmes.com.np` or production).
+   - `kmes.edu.np`
+   - `www.kmes.edu.np` (Select redirect to `kmes.edu.np` or production).
 4. Status check:
    - While Mercantile is pending, Vercel displays `Invalid Configuration` because the DNS servers cannot yet be resolved globally.
    - Once Mercantile approves the domain and Cloudflare DNS propagates, Vercel will automatically show **Valid Configuration** with a green checkmark.
@@ -81,15 +81,15 @@ This guide explains how `kmes.com.np` is configured across **Mercantile Communic
 
 ## 4. Render Configuration (Backend)
 
-The backend code has already been updated with built-in CORS support for `https://kmes.com.np` and `https://www.kmes.com.np`.
+The backend code has already been updated with built-in CORS support for `https://kmes.edu.np` and `https://www.kmes.edu.np`.
 
 To ensure password reset links and allowed origins are fully synchronized, verify these environment variables in your [Render Dashboard](https://dashboard.render.com/) under **kmes-school-60eq** -> **Environment**:
 
 | Environment Variable | Value | Purpose |
 | :--- | :--- | :--- |
-| `ALLOWED_ORIGINS` | `https://kmes.com.np,https://www.kmes.com.np,https://kmes-school-xi.vercel.app` | Explicit CORS whitelist for browser requests |
-| `FRONTEND_URL` | `https://kmes.com.np` | Default frontend URL |
-| `RESET_LINK_BASE` | `https://kmes.com.np` | Base URL used when building password reset emails |
+| `ALLOWED_ORIGINS` | `https://kmes.edu.np,https://www.kmes.edu.np,https://kmes-school-xi.vercel.app` | Explicit CORS whitelist for browser requests |
+| `FRONTEND_URL` | `https://kmes.edu.np` | Default frontend URL |
+| `RESET_LINK_BASE` | `https://kmes.edu.np` | Base URL used when building password reset emails |
 | `EMAIL_PROVIDER` | `smtp` | Production email delivery |
 | `SMTP_HOST` | `smtp.gmail.com` | Gmail SMTP server |
 | `SMTP_PORT` | `587` | STARTTLS port |
@@ -106,13 +106,13 @@ Once Mercantile approves the domain:
 
 1. **Verify DNS Resolution**:
    ```bash
-   nslookup kmes.com.np
-   nslookup www.kmes.com.np
+   nslookup kmes.edu.np
+   nslookup www.kmes.edu.np
    ```
    Both should return IP `76.76.21.21`.
 
 2. **Verify Frontend**:
-   - Visit `https://kmes.com.np` in your browser.
+   - Visit `https://kmes.edu.np` in your browser.
    - The school homepage should load with a valid SSL padlock.
 
 3. **Verify API Communication & CORS**:
@@ -120,5 +120,5 @@ Once Mercantile approves the domain:
    - Check that notices, events, and site settings load with `200 OK` from `https://kmes-school-60eq.onrender.com`.
 
 4. **Verify Password Reset Link**:
-   - Go to `https://kmes.com.np/admin` -> Forgot password.
-   - Request reset email -> check inbox -> ensure the link starts with `https://kmes.com.np/reset-password?token=...`.
+   - Go to `https://kmes.edu.np/admin` -> Forgot password.
+   - Request reset email -> check inbox -> ensure the link starts with `https://kmes.edu.np/reset-password?token=...`.

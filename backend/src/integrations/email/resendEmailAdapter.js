@@ -8,7 +8,7 @@
 // Configuration (environment-only):
 //   EMAIL_PROVIDER=resend
 //   RESEND_API_KEY=re_...
-//   EMAIL_FROM=onboarding@resend.dev (or info@kmes.com.np once domain is verified in Resend)
+//   EMAIL_FROM=onboarding@resend.dev (or info@kmes.edu.np once domain is verified in Resend)
 //   EMAIL_FROM_NAME=Kaseni Model Secondary English School
 //   ADMIN_NOTIFICATION_EMAIL=ivanbhattarai042@gmail.com
 import { Resend } from "resend";

@@ -40,13 +40,13 @@ async function runTests() {
   // Test Password Reset
   const resetResult = await adapter.sendPasswordReset({
     to: "teacher@kmes.edu.np",
-    resetClientUrl: "https://kmes.com.np/reset-password?token=safe_token_123",
+    resetClientUrl: "https://kmes.edu.np/reset-password?token=safe_token_123",
   });
   assert.equal(resetResult.ok, true);
   assert.equal(resetResult.id, "msg_test_123");
   assert.equal(lastSentPayload.to, "teacher@kmes.edu.np");
   assert.ok(lastSentPayload.subject.includes("password"));
-  assert.ok(lastSentPayload.html.includes("https://kmes.com.np/reset-password?token=safe_token_123"));
+  assert.ok(lastSentPayload.html.includes("https://kmes.edu.np/reset-password?token=safe_token_123"));
   console.log("PASS: sendPasswordReset dispatches valid email payload");
 
   // Test Security Notification

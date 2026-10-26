@@ -19,15 +19,15 @@ The HostMaster,
 Mercantile Communication Pvt. Ltd.
 Durbar Marg, Kathmandu, Nepal
 
-Subject: Application for Registration of Domain Name "kmes.com.np"
+Subject: Application for Registration of Domain Name "kmes.edu.np"
 
 Respected Sir/Madam,
 
-I am writing to formally request the registration of the domain name "kmes.com.np" on behalf of Kaseni Model Secondary English School (KMES), established in 2059 B.S. and located in Kaseni, Nepal.
+I am writing to formally request the registration of the domain name "kmes.edu.np" on behalf of Kaseni Model Secondary English School (KMES), established in 2059 B.S. and located in Kaseni, Nepal.
 
-Our institution provides quality English-medium education from Nursery to Grade 10. We intend to use the domain "kmes.com.np" to launch and host our official school web portal, publish academic notices, share examination results, and communicate important school events and admissions information with our students, parents, and community.
+Our institution provides quality English-medium education from Nursery to Grade 10. We intend to use the domain "kmes.edu.np" to launch and host our official school web portal, publish academic notices, share examination results, and communicate important school events and admissions information with our students, parents, and community.
 
-The domain "kmes.com.np" directly corresponds to the acronym of our school (Kaseni Model Secondary English School).
+The domain "kmes.edu.np" directly corresponds to the acronym of our school (Kaseni Model Secondary English School).
 
 Below are our technical name server details configured on Cloudflare:
 
@@ -36,7 +36,7 @@ Below are our technical name server details configured on Cloudflare:
 
 We have attached a copy of our official School Registration Certificate / Institutional PAN document for verification.
 
-We kindly request you to approve and activate the domain name "kmes.com.np" at your earliest convenience.
+We kindly request you to approve and activate the domain name "kmes.edu.np" at your earliest convenience.
 
 Thank you for your assistance and support.
 

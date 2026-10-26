@@ -5,7 +5,7 @@ const accountId = (process.env.R2_ACCOUNT_ID || "a4556a7dd2c35190a791424061384ec
 const accessKeyId = (process.env.R2_ACCESS_KEY_ID || "").trim();
 const secretAccessKey = (process.env.R2_SECRET_ACCESS_KEY || "").trim();
 const bucketName = (process.env.R2_BUCKET_NAME || "kmes-school-media").trim();
-const publicDomain = (process.env.R2_PUBLIC_URL || "https://media.kmes.com.np").trim().replace(/\/+$/, "");
+const publicDomain = (process.env.R2_PUBLIC_URL || "https://media.kmes.edu.np").trim().replace(/\/+$/, "");
 
 export const isR2Configured = () => Boolean(accessKeyId && secretAccessKey);
 
