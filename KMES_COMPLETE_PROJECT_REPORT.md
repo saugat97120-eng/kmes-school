@@ -1,343 +1,244 @@
 # Kaseni Model Secondary English School (KMES) — Complete Project Documentation & Master Report
 
-**Document Version:** 1.0.0  
+**Document Version:** 2.0.0  
+**Last Updated:** 2026-11-11  
 **Project:** Kaseni Model Secondary English School (KMES) Official Website & Content Management System  
 **Repository:** `https://github.com/saugat97120-eng/kmes-school.git`  
-**Root Path:** `C:\Users\Dell\OneDrive\Desktop\KMES FILES\kmes-school`  
-**Current Branch:** `main`  
-**System Status:** **100% Green / Ready for Production**  
+**Local Workspace:** `C:\Users\Dell\OneDrive\Desktop\KMES FILES\kmes-school`  
+**Branch:** `main`  
 
 ---
 
-## 1. Executive Summary
+## 1. Executive Summary & School Profile
 
-Kaseni Model Secondary English School (KMES) is a modern, full-stack web application and content management system developed to provide an engaging public portal for students, parents, and alumni, as well as a role-governed administration panel for school staff.
+The **KMES School Portal** is a full-stack public school website and role-governed Content Management System (CMS) built for **Kaseni Model Secondary English School**. It combines a public informational site (Home, About, Academics, Facilities, Activities, Notices, Events, Gallery, Achievements, Online Admissions Inquiry, and Contact) with a role-protected `/admin` editorial workspace featuring multi-stage content approval, audit trails, authentication security hardening, cloud object storage, and transactional email alerts.
 
-The system combines a reactive single-page frontend with an Express/Node.js REST API backed by MongoDB. It incorporates publishing lifecycles, role-based access control, media hosting, external social media interoperability, an AI content copilot, and automated regression/disaster recovery safeguards.
-
-### Core Stack Summary
-* **Frontend:** React 19, Vite, Tailwind CSS 4, React Router 7, `lucide-react`, Oxlint.
-* **Backend:** Node.js (>=18), Express 5, Mongoose 9, MongoDB Atlas / MongoDB Memory Server.
-* **Security & Auth:** JWT with `authVersion` session invalidation, bcrypt.js password hashing, helmet, express-rate-limit, express-validator, magic-number document signature validation.
-* **Integrations:** Cloudinary (media upload & transformations), Facebook Graph API (adapter-based social sync), AI Content Assistant (adapter-based multi-LLM copilot), Nodemailer (SMTP password reset & security alerts).
+### Verified School Details (Configured in Code & Letterhead)
+* **Institution Name:** Kaseni Model Secondary English School (KMES)
+* **Established:** 2059 B.S. (Nursery to Grade 10)
+* **Academic Session:** 2081/2082
+* **Address:** Belbari-05, Kaseni, Morang, Nepal
+* **Principal:** Ivan Bhattarai
+* **Contact Phones:** `+977 9842089044, 9817361024`
+* **Primary Administration & Notification Email:** `ivanbhattarai042@gmail.com`
+* **Official Facebook Page:** `https://www.facebook.com/61554117025008`
+* **Institutional Identifiers (Letterhead):** PAN `601571219` · Regd. No. `00734`
+* **Target Production Domains:** `https://kmes.edu.np` / `https://www.kmes.edu.np` (transitioned from `kmes.com.np` in commit `ea2c9b8`; pending Mercantile `.np` approval)
+* **Live Staging/Hosting Endpoints:**
+  * **Frontend (Vercel):** `https://kmes-school-xi.vercel.app` (and `https://kmes-school.vercel.app`)
+  * **Backend API (Render):** `https://kmes-school-60eq.onrender.com`
 
 ---
 
-## 2. Complete Phase Chronology (From 1st to Last)
+## 2. Technology Stack
 
+* **Frontend (`frontend/`):**
+  * React `19.2.8`, React DOM `19.2.8`, React Router `7.18.2`
+  * Vite `8.2.2` (`@vitejs/plugin-react`), Tailwind CSS `4.3.3` (`@tailwindcss/vite`)
+  * `@clerk/react` `^6.17.8` (Google/Social SSO, `ClerkProvider`, `UserButton`, `OrganizationSwitcher`)
+  * `lucide-react` `1.34.0`, Oxlint `1.79.0`
+* **Backend (`backend/`):**
+  * Node.js `>=18.0.0`, Express `5.2.1`, Mongoose `9.9.3`
+  * MongoDB Atlas (`cluster0.njdpdb6.mongodb.net/kmes`) & `mongodb-memory-server` `11.2.0` (isolated offline testing)
+  * Authentication & Security: `@clerk/express` `^2.1.78`, `jsonwebtoken` `9.0.3`, `bcryptjs` `3.0.3`, `helmet` `8.3.0`, `cors` `2.8.6`, `express-rate-limit` `8.7.0`, `express-validator` `7.3.2`
+  * Media & File Uploads: `@aws-sdk/client-s3` `^3.1152.0` (Cloudflare R2 S3-compatible client), `cloudinary` `2.11.0`, `multer` `2.3.0`
+  * Transactional Email: `resend` `^6.34.1`, `nodemailer` `10.0.0`
+  * Utilities: `dotenv` `17.4.2`, `morgan` `1.11.0`
+
+---
+
+## 3. Complete Chronology of Engineering Work
+
+```mermaid
+flowchart LR
+    P1["Phases 1-15: Core Website & CMS"] --> P16["Phases 16-17: Indexing & Disaster Recovery"]
+    P16 --> P18["Phases 18-20: Prod Hardening & Bootstrap"]
+    P18 --> P21["Phase 21: Audit Remediation & Live Data"]
+    P21 --> P22["Phase 22: UI/UX, Lockout & Security"]
+    P22 --> P23["Phase 23: Clerk, Cloudflare R2 & Custom Domain"]
+    P23 --> P24["Phase 24: Verified Content, Resend Email & Pages Headers"]
 ```
-[Phases 1-15: Core Platform] ──► [Phase 16: Indexing & Perf] ──► [Phase 17: Disaster Recovery]
-                                                                        │
-[Phase 20: Bootstrap Hardening] ◄── [Phase 19: Prod Verify] ◄── [Phase 18: Prod Readiness]
-          │
-          ▼
-[Phase 21: Audit Remediation] ──► [Post-Phase 21: Lint & Fallback] ──► [Production State]
-```
 
-### 2.1 Phases 1 – 15: Platform Genesis & Core Feature Matrix
-* **Foundation:** Established monorepo containing `backend/` and `frontend/`.
-* **Public Pages:** Created pages for Home, About Us, Academics, Facilities, Activities, Notices, Events, Gallery, Achievements, Admissions, and Contact.
-* **Admin CMS (`/admin`):** Implemented an administrative workspace with sidebar navigation, login protection, and management modules for all core collections.
-* **Content Approval Workflow:** Formatted a 5-stage lifecycle (`draft → submitted → reviewed → approved → published`) with role gates (`editor` creates/submits, `admin` approves/publishes).
-* **Integrations Architecture:** Created mockable adapter abstractions for Cloudinary, Facebook Graph API, and AI writing assistants.
+### 3.1 Phases 1 – 20: Core Platform, Indexing, Disaster Recovery & Production Hardening
+* **Core Monorepo (Phases 1–15):** Built 13 Mongoose models, CRUD factory (`backend/src/utils/crudFactory.js`), 5-stage editorial workflow (`draft` → `submitted` → `reviewed` → `approved` → `published`), granular RBAC (`backend/src/permissions.js`, `admin` vs `editor`), AI content assistant adapter (`backend/src/integrations/ai/`), and Facebook Graph API adapter (`backend/src/integrations/facebook/`).
+* **Performance & Indexing (Phase 16):** Added composite indexes across workflow content and activity logs (`PHASE16_REPORT.md`).
+* **Disaster Recovery (Phase 17):** Documented BSON/JSON backup and restore procedures in [`docs/DISASTER_RECOVERY.md`](docs/DISASTER_RECOVERY.md) and [`docs/RESTORE_CHECKLIST.md`](docs/RESTORE_CHECKLIST.md).
+* **Production Auth & Infrastructure (Phases 18–20):**
+  * Single-use SHA-256 hashed password reset tokens (`backend/src/utils/resetToken.js`) and session invalidation via `User.authVersion`.
+  * Database-aware `/api/health` endpoint (`503` when MongoDB disconnects).
+  * Concurrency-safe first-admin bootstrap (`backend/src/utils/adminBootstrap.js`) controlled by strict `ALLOW_ADMIN_BOOTSTRAP=true` and `ADMIN_BOOTSTRAP_EMAIL`.
+  * Strict boot-time email provider validation (`assertEmailProviderConfiguration()`).
 
-### 2.2 Phase 16: Performance, Indexing & Load Hardening
-* **Benchmark Suite (`bench16.mjs`):** Built high-density benchmark harness across 30,000 notices, 8,000 events, 6,000 gallery images, and 60,000 activity logs.
-* **Index Optimization:** Converted expensive full collection scans (`COLLSCAN`) to indexed scans (`IXSCAN`) by introducing composite indexes on `{ deletedAt: 1, status: 1, createdAt: -1 }` and `{ resourceType: 1, resourceId: 1, createdAt: -1 }`.
+### 3.2 Phase 21: Review Remediation & Frontend Live Integration
+* Added `backend/src/config/loadEnv.js` as the single non-overriding `.env` loader imported first in `server.js` and storage configs.
+* Fixed bulk unpublish crash, enforced `http(s)` URL validation (blocking `javascript:` and `data:` URLs), preserved attachment subdocument `_id`s on save, added binary magic-number validation (`fileValidation.js`) for images and PDF/DOCX/ZIP attachments, escaped search regexes (`escapeRegex.js`), and rate-limited contact submissions.
+* Connected all public homepage sections to live API endpoints and added `ScrollToTop`, SEO files (`robots.txt`, `sitemap.xml`), admin Leadership Management UI (`LeadershipManager.jsx`), and offline snapshot fallback in `backend/scripts/audit-content.mjs`.
 
-### 2.3 Phase 17: Disaster Recovery & Backup Integrity
-* **Backup Runbook:** Established recovery procedures in [`docs/DISASTER_RECOVERY.md`](file:///C:/Users/Dell/OneDrive/Desktop/KMES%20FILES/kmes-school/docs/DISASTER_RECOVERY.md) and [`docs/RESTORE_CHECKLIST.md`](file:///C:/Users/Dell/OneDrive/Desktop/KMES%20FILES/kmes-school/docs/RESTORE_CHECKLIST.md).
-* **Driver-Level JSON Export/Restore:** Implemented type-safe BSON/JSON export mechanism preserving ObjectIds, ISODates, and subdocument schemas.
+### 3.3 Post-Phase 21 Security, UI/UX & Accessibility Upgrades (`dd3135d` – `72088e9`)
+* **UI/UX Enhancements (`dd3135d`):**
+  * Added [`EmergencyAlertBar.jsx`](frontend/src/components/common/EmergencyAlertBar.jsx) showing dynamic admission/session announcements with `sessionStorage` dismissal.
+  * Added [`FloatingQuickContact.jsx`](frontend/src/components/common/FloatingQuickContact.jsx) with direct WhatsApp (`wa.me`), phone `tel:`, mailto, and office hours.
+  * Added [`CardSkeleton.jsx`](frontend/src/components/common/CardSkeleton.jsx) loading placeholders across Notices, Events, Facilities, and Gallery.
+  * Upgraded [`Admissions.jsx`](frontend/src/pages/Admissions.jsx) with a digital admission inquiry form generating printable confirmation slips with `KMES-YYYY-XXXX` Tracking IDs persisted through `/api/contact`.
+* **Render & Dependency Hardening (`1c57d27`, `fd06b6d`):**
+  * Added root `GET /` JSON health/metadata route on `server.js` to prevent `404` responses on Render platform probes.
+  * Removed `nodemon` dev dependency and adopted Node native `node --watch src/server.js`.
+* **Accessibility, Timing & Brute-Force Protection (`530fd8d`, `abde663`, `507596d`):**
+  * Linked `htmlFor`, `id`, and `name` attributes in forms (`LeadershipManager.jsx`).
+  * Restricted `express.json` and `express.urlencoded` payloads to `1mb`.
+  * Added constant-time bcrypt dummy-hash comparison (`DUMMY_HASH`) on login when an email does not exist, preventing user-enumeration timing leaks.
+  * Implemented **5-attempt account lockout** (`User.failedLoginAttempts`, `User.lockUntil`) locking accounts for 15 minutes (`HTTP 423`), with administrator unlock capability via `PUT /api/users/:id` (`{ unlock: true }`) and expanded audit logging (`login`, `login_failed`, `account_locked`) in `ActivityLog`.
+  * Built automated verification in `backend/tests/security-lockout-audit.test.mjs` and updated UI views (`UsersManager.jsx`, `ActivityLogs.jsx`).
+* **Reset Diagnostics & Bootstrap Alignment (`6f02188`, `72088e9`):**
+  * Added safe diagnostic guidance in `AdminLogin.jsx` and `auth.routes.js` when email delivery uses mock/unconfigured SMTP.
+  * Updated default `ADMIN_BOOTSTRAP_EMAIL` fallback in `backend/src/config/env.js` to `ivanbhattarai042@gmail.com`.
 
-### 2.4 Phase 18 (18B & 18C): Production Readiness Hardening
-* **Password Reset Workflow:** Implemented SHA-256 hashed single-use reset tokens with strict expiry and security alerts.
-* **Session Invalidation:** Added `authVersion` tracking in `User` model, terminating stale JWT tokens upon password or role modification.
-* **Database-Aware Health Probe:** Upgraded `/api/health` to dynamically report 503 Service Unavailable if MongoDB loses connectivity.
-* **Hosting Foundation:** Configured Vercel deployment (`frontend/vercel.json`) with Content Security Policy (CSP) and Render configuration (`backend/render.yaml`).
-* **SMTP Delivery:** Wired Nodemailer integration with support for TLS/STARTTLS and zero credential leaks in logs.
+### 3.4 Clerk SSO, Organizations & Dual Authentication (`99bc0ff`, `4fb1440`, `ea2c9b8`)
+* **Frontend Clerk Integration:**
+  * Installed `@clerk/react` (`^6.17.8`) and wrapped the application in `<ClerkProvider>` inside [`frontend/src/main.jsx`](frontend/src/main.jsx) when `VITE_CLERK_PUBLISHABLE_KEY` is configured.
+  * Linked Clerk Application `app_3KjhWHMkr5RB5HPtU2FAbrr8S9O` ("KMES School"), enabled Clerk Organizations, and configured Google OAuth Sign-In.
+  * Updated [`frontend/src/admin/AdminLogin.jsx`](frontend/src/admin/AdminLogin.jsx) with `ClerkLoginSection` (`SignInButton` modal + `syncing` UI state) calling `POST /api/auth/clerk-sync`.
+  * Updated [`frontend/src/admin/AdminLayout.jsx`](frontend/src/admin/AdminLayout.jsx) with `<Show when="signed-in">` wrapping `<OrganizationSwitcher />` and `<UserButton />`.
+* **Backend Dual-Auth & Account Sync:**
+  * Installed `@clerk/express` (`^2.1.78`) and mounted `clerkMiddleware()` in `server.js` when `CLERK_SECRET_KEY` is present.
+  * Added `clerkUserId` field on `User` schema (`backend/src/models/User.js`).
+  * Updated `requireAuth` (`backend/src/middleware/auth.js`) to accept Clerk session tokens first via `getAuth(req)` and fall back cleanly to traditional Bearer JWT + `authVersion` checks.
+  * Implemented `POST /api/auth/clerk-sync` (`backend/src/routes/auth.routes.js`) mapping Clerk emails (`saugat97120@gmail.com`, `ivanbhattarai042@gmail.com`, bootstrap admin, or first DB user → `admin`; others → `editor`) to app JWT sessions and audit logs.
+* **CSP Compatibility:** Updated Content Security Policy headers in `frontend/vercel.json` and `frontend/public/_headers` to permit Clerk (`https://*.clerk.accounts.dev`, `https://clerk.com`, `https://*.clerk.com`, `https://api.clerk.com`, `https://img.clerk.com`, `blob:` workers) and Cloudflare challenge scripts (`https://challenges.cloudflare.com`).
 
-### 2.5 Phase 19: Staging & Production Verification
-* Verified end-to-end multi-origin CORS configurations, client URL redirects, and environment variable isolation between dev, staging, and production environments.
+### 3.5 Cloudflare R2 Storage & Hybrid Fallback (`454539b`, `ea2c9b8`)
+* **R2 Adapter (`backend/src/config/r2.js`):** Implemented S3-compatible client using `@aws-sdk/client-s3` targeting `https://<accountId>.r2.cloudflarestorage.com` with `uploadToR2()`, `deleteFromR2()`, and folder namespace (`media`, `attachments`, `gallery`).
+* **Hybrid Route Wiring:** Updated [`upload.routes.js`](backend/src/routes/upload.routes.js), [`attachments.routes.js`](backend/src/routes/attachments.routes.js), [`media.routes.js`](backend/src/routes/media.routes.js), [`cloudinaryCleanup.js`](backend/src/utils/cloudinaryCleanup.js), and [`facebookService.js`](backend/src/integrations/facebook/facebookService.js):
+  * Uses Cloudflare R2 whenever `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` are set.
+  * Automatically falls back to Cloudinary (`isCloudinaryConfigured()`) when R2 keys are absent, keeping legacy Cloudinary URLs and current uploads 100% operational.
+* **Operational Note on R2 Activation:** Live Cloudflare API testing confirmed that Cloudflare requires an active payment method on file to enable R2 billing (even for the 10 GB free tier). Until billing is enabled in Cloudflare, the backend cleanly operates using active Cloudinary credentials (`status: 'ok'`). Setup steps are documented in [`docs/R2_STORAGE_GUIDE.md`](docs/R2_STORAGE_GUIDE.md).
 
-### 2.6 Phase 20: First-Admin Bootstrap & Concurrency Hardening
-* Solved the race condition in initial school provisioning using `ALLOW_ADMIN_BOOTSTRAP` and `ADMIN_BOOTSTRAP_EMAIL` with atomic registration locks.
-* Ensured public registration closes permanently once the first administrator account is created.
+### 3.6 Custom Domain, DNS Automation & Mercantile Documentation (`bc2511c`, `bbc5225`, `ea2c9b8`)
+* **Cloudflare DNS & Domain Whitelist:**
+  * Automated Cloudflare DNS zone setup (`becky.ns.cloudflare.com` and `earl.ns.cloudflare.com`) pointing `@` (`76.76.21.21`), `www` (`cname.vercel-dns.com`), and `api` (`kmes-school-60eq.onrender.com`).
+  * Added explicit CORS whitelist in [`backend/src/server.js`](backend/src/server.js) (`KMES_CUSTOM_DOMAINS`: `kmes.edu.np` and `www.kmes.edu.np` over HTTP/HTTPS).
+  * Updated `frontend/public/sitemap.xml` and `frontend/public/robots.txt`, and added Cloudflare Pages SPA support via [`frontend/public/_redirects`](frontend/public/_redirects) and [`frontend/public/_headers`](frontend/public/_headers).
+* **Mercantile Registration Documentation:**
+  * Authored [`docs/DOMAIN_SETUP_GUIDE.md`](docs/DOMAIN_SETUP_GUIDE.md) and [`docs/MERCANTILE_COVER_LETTER.md`](docs/MERCANTILE_COVER_LETTER.md).
+  * Reviewed and approved the school's official signed and rubber-stamped cover letter on institutional letterhead (PAN `601571219`, Regd. No. `00734`, Principal Ivan Bhattarai) for submission to `register.com.np`.
 
-### 2.7 Phase 21: Review Remediation & Frontend Modernization
-* **Backend Hardening:**
-  * Created `backend/src/config/loadEnv.js` to guarantee clean environment initialization without dotenv overwrite traps.
-  * Resolved bulk unpublish return bug (`results.unpublished`).
-  * Implemented contact form IP rate limiting (8 submissions / 15 min) and schema field allow-lists.
-  * Added `escapeRegex` utility to prevent regular expression DoS in search queries.
-  * Enforced URL protocol validation, blocking `javascript:` and unsafe schemas in media and attachments.
-  * Preserved subdocument `_id` and metadata during attachment round-trips.
-  * Added binary magic-number signature verification for PDF, DOCX, and ZIP uploads.
-  * Made public `/api/site-settings` and `/api/leadership` read-only.
-* **Frontend Modernization:**
-  * Replaced mock demo data with live API queries across all homepage sections with empty-state handling.
-  * Centralized API base URL logic in `frontend/src/config.js`.
-  * Added `ScrollToTop` router synchronization and accessible mobile navigation drawers.
-  * Formatted human-readable dates and lazy-loaded image fallbacks.
-
-### 2.8 Post-Phase 21: Final Polish & Audit Resilience
-* Fixed all React effect warnings and unused imports in `LeadershipManager.jsx`, achieving **0 errors and 0 warnings** under Oxlint.
-* Enhanced `audit-content.mjs` with automatic fallback to offline backup snapshots when remote MongoDB connectivity is unavailable.
-* Verified all test suites (Unit, Integration, RBAC, Bootstrap, Regression) and pushed clean commits to `origin/main`.
+### 3.7 Verified School Details & Transactional Email via Resend (`e2c17ce`, `8c3783f`, `ea2c9b8`)
+* **Verified Public Data (`e2c17ce`):**
+  * Updated [`siteSettingsDefaults.js`](frontend/src/context/siteSettingsDefaults.js) with `Belbari-05, Kaseni, Morang`, `+977 9842089044, 9817361024`, `ivanbhattarai042@gmail.com`, and Principal `Ivan Bhattarai`.
+  * Updated [`FloatingQuickContact.jsx`](frontend/src/components/common/FloatingQuickContact.jsx) and [`TopBar.jsx`](frontend/src/components/layout/TopBar.jsx) to extract the primary phone number safely before generating `tel:` and `https://wa.me/...` links.
+  * Updated [`backend/src/seed.js`](backend/src/seed.js) with realistic school notices, events, facilities, and activities instead of placeholder text.
+* **Resend Email Integration (`8c3783f`, `ea2c9b8`):**
+  * Created [`backend/src/integrations/email/resendEmailAdapter.js`](backend/src/integrations/email/resendEmailAdapter.js) (`ResendEmailAdapter`, `ResendServiceError`) supporting HTML password resets, security notifications, and automated website inquiry/admission alerts (`sendInquiryNotification`).
+  * Wired `resend` into [`emailService.js`](backend/src/integrations/email/emailService.js) (including syncing `activeConfig.provider` in `assertEmailProviderConfiguration()`) and triggered non-blocking inquiry email alerts from [`contact.routes.js`](backend/src/routes/contact.routes.js) targeting `ADMIN_NOTIFICATION_EMAIL` (default `ivanbhattarai042@gmail.com`).
+  * Updated [`Admissions.jsx`](frontend/src/pages/Admissions.jsx) form submission metadata to route inquiries under `ivanbhattarai042@gmail.com`.
+  * Added 5 automated unit assertions in [`backend/tests/resend.unit.mjs`](backend/tests/resend.unit.mjs).
 
 ---
 
-## 3. Architecture & System Topology
+## 4. Architecture & Data Overview
 
 ```mermaid
 flowchart TD
-    subgraph Client["Client Tier (Browser)"]
-        SPA["React 19 SPA (Vite + Tailwind)"]
-        AdminUI["Admin CMS (/admin)"]
-        PublicUI["Public School Pages"]
+    Visitor["Public Browser Visitor"] -->|HTTPS| Edge["Vercel / Cloudflare Pages SPA + CSP"]
+    AdminUser["Staff / Principal Admin"] -->|Google SSO or JWT| Edge
+
+    Edge -->|REST JSON + Bearer / Clerk Token| Express["Render Node/Express API (backend/src/server.js)"]
+
+    subgraph SecurityLayer["API Security Pipeline"]
+        HelmetCors["Helmet + Strict Origin CORS"]
+        RateLimits["Rate Limiters (API 300, Auth 20, Contact 8, AI 30)"]
+        DualAuth["Dual Auth Middleware (Clerk + JWT authVersion)"]
+        RBAC["Permission Gate + Mongoose Validation"]
     end
 
-    subgraph Backend["API Tier (Node.js / Express)"]
-        Server["server.js (Port 5000)"]
-        AuthMiddleware["JWT + RBAC Middleware"]
-        Sanitize["Input Sanitizer & Rate Limiters"]
-        Routes["RESTful API Route Layer"]
-        CRUDFactory["Universal CRUD Factory"]
-    end
-
-    subgraph Database["Persistence Tier"]
-        Mongo["MongoDB Atlas (13 Collections)"]
-        Indexes["Composite B-Tree Indexes"]
-    end
-
-    subgraph Integrations["External Services (Adapter Pattern)"]
-        Cloudinary["Cloudinary (Media Storage)"]
-        Facebook["Facebook Graph API"]
-        AI["AI LLM Providers"]
-        SMTP["SMTP Mail Provider"]
-    end
-
-    PublicUI -->|HTTP / JSON| Server
-    AdminUI -->|JWT Bearer Token| Server
-    Server --> Sanitize --> AuthMiddleware --> Routes --> CRUDFactory --> Mongo
-    Mongo --- Indexes
-    Routes --> Cloudinary
-    Routes --> Facebook
-    Routes --> AI
-    Routes --> SMTP
+    Express --> SecurityLayer
+    SecurityLayer --> Mongo["MongoDB Atlas (13 Collections, 3-Node Replica Set)"]
+    SecurityLayer --> R2Fallback["Media Layer (Cloudflare R2 Primary / Cloudinary Fallback)"]
+    SecurityLayer --> EmailLayer["Email Service (Resend REST API / SMTP / Mock)"]
+    SecurityLayer --> SocialAI["Facebook Graph API & AI Copilot Adapters"]
 ```
 
-### Project Directory Structure
-```
-kmes-school/
-├── .github/workflows/ci.yml       # Automated GitHub Actions CI pipeline
-├── backend/                       # Express REST API
-│   ├── scripts/                   # Administrative CLI utilities (audit-content.mjs)
-│   ├── src/
-│   │   ├── config/                # Environment, Database, and Cloudinary configuration
-│   │   ├── integrations/          # External services (AI, Email, Facebook)
-│   │   ├── middleware/            # Auth, RBAC, Upload, Error, Sanitization
-│   │   ├── models/                # 13 Mongoose Data Models
-│   │   ├── routes/                # 21 Express Route Modules
-│   │   ├── utils/                 # Admin bootstrap, CRUD factory, regex safety
-│   │   ├── permissions.js         # Granular permission mapping table
-│   │   └── server.js              # Application entrypoint
-│   ├── tests/                     # Unit, integration, bootstrap, and regression suites
-│   ├── .env.example               # Safe configuration reference template
-│   └── package.json               # Backend dependencies & npm scripts
-├── frontend/                      # React 19 Single Page Application
-│   ├── src/
-│   │   ├── admin/                 # Admin CMS Views, Managers, and Layouts
-│   │   ├── components/            # UI Cards, Layouts, Home Sections, Modals
-│   │   ├── context/               # SiteSettings and Auth Context Providers
-│   │   ├── hooks/                 # Custom React hooks (useApiList, etc.)
-│   │   ├── pages/                 # Public route pages (Home, About, Contact, etc.)
-│   │   ├── utils/                 # Formatting, API helpers, token storage
-│   │   ├── App.jsx                # Route registry
-│   │   ├── config.js              # Centralized environment configuration
-│   │   └── main.jsx               # React DOM bootstrap
-│   ├── index.html                 # HTML shell with SEO meta tags
-│   ├── vercel.json                # Production routing & CSP headers
-│   └── package.json               # Frontend dependencies & npm scripts
-├── backup/                        # Point-in-time JSON database snapshots
-└── docs/                          # Disaster recovery, restore checklist, deployment guides
-```
+### 4.1 Database Collections (13 Mongoose Models)
+1. `User` (`users`) — Name, email, bcrypt hash, role (`admin`/`editor`), `authVersion`, `passwordResetTokenHash`, `passwordResetExpires`, `failedLoginAttempts`, `lockUntil`, `clerkUserId`.
+2. `Notice` (`notices`) — School notices/circulars, pinned flag, attachments, workflow status, soft delete.
+3. `Event` (`events`) — Event dates, locations, cover images, workflow status.
+4. `Facility` (`facilities`) — Campus facilities, descriptions, images, status.
+5. `Activity` (`activities`) — Co-curricular programs, sports, scouts, clubs.
+6. `Achievement` (`achievements`) — SEE & student honors, year, category.
+7. `GalleryImage` (`galleryimages`) — Album photos, categories, R2/Cloudinary public IDs.
+8. `SiteSettings` (`sitesettings`) — School branding, contact info, leadership copy, working hours, academic session.
+9. `PageContent` (`pagecontents`) — CMS-managed page sections indexed by lowercase `slug`.
+10. `ContactMessage` (`contactmessages`) — Visitor contact & online admission inquiries, read/archived flags.
+11. `ActivityLog` (`activitylogs`) — Full audit log for auth (`login`, `login_failed`, `account_locked`), content, media, users, settings, Facebook, and AI.
+12. `Media` (`media`) — Uploaded media asset registry (`url`, `publicId`, `filename`, `format`, `bytes`).
+13. `FacebookSync` (`facebooksyncs`) — Import/publish deduplication logs with external ID tracking.
+
+### 4.2 Mounted API Routes (`backend/src/server.js`)
+* **Platform Health:** `GET /`, `GET /api/health`
+* **Auth & Sync:** `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`, `POST /api/auth/forgot-password`, `POST /api/auth/reset-password`, `POST /api/auth/clerk-sync`
+* **Public & CMS Content (`/api/{notices,events,gallery,achievements,facilities,activities}`):**
+  * Public: `GET /`, `GET /:id`
+  * Admin CRUD: `GET /admin/all`, `POST /`, `PUT /:id`, `DELETE /:id`, `GET /admin/trash`, `PUT /admin/trash/:id/restore`, `DELETE /admin/trash/:id`, `POST /admin/bulk-publish`, `POST /admin/bulk-trash`
+  * Workflow: `POST /:id/{submit,review,approve,reject,publish,unpublish}`
+* **Settings & Pages:** `/api/site-settings`, `/api/leadership`, `/api/page-content` (`GET /?slug=...`)
+* **Inquiries & Administration:** `/api/contact` (`POST /` public; `GET /`, `PUT /:id`, `DELETE /:id` admin), `/api/inbox`, `/api/dashboard/stats`, `/api/users`, `/api/activity-logs`
+* **Uploads & Media:** `POST /api/upload`, `POST /api/attachments/upload/:resource/:id`, `DELETE /api/attachments/:resource/:id/:attachmentId`, `GET /api/media`, `DELETE /api/media/:id`
+* **Social & AI:** `/api/integrations/facebook/*` (`status`, `test-connection`, `posts`, `import`, `sync`, `publish`), `/api/ai/*` (`status`, `suggest`, `apply`)
+
+### 4.3 Documentation Library (`docs/`)
+* [`docs/DOMAIN_SETUP_GUIDE.md`](docs/DOMAIN_SETUP_GUIDE.md) — Cloudflare DNS, Mercantile delegation, Vercel & Render configuration (`kmes.edu.np`)
+* [`docs/MERCANTILE_COVER_LETTER.md`](docs/MERCANTILE_COVER_LETTER.md) — Official `.np` domain application cover letter template & checklist
+* [`docs/R2_STORAGE_GUIDE.md`](docs/R2_STORAGE_GUIDE.md) — Cloudflare R2 bucket (`kmes-school-media`) & `media.kmes.edu.np` guide
+* [`docs/FACEBOOK_INTEGRATION_GUIDE.md`](docs/FACEBOOK_INTEGRATION_GUIDE.md) — Meta Graph API setup guide for Page ID `61554117025008`
+* [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — Full staging/production deployment runbook
+* [`docs/PRODUCTION_RUNBOOK.md`](docs/PRODUCTION_RUNBOOK.md) & [`docs/FINAL_PRODUCTION_VERIFICATION.md`](docs/FINAL_PRODUCTION_VERIFICATION.md)
+* [`docs/DISASTER_RECOVERY.md`](docs/DISASTER_RECOVERY.md) & [`docs/RESTORE_CHECKLIST.md`](docs/RESTORE_CHECKLIST.md)
+* [`docs/PHASE19_PRODUCTION_VERIFICATION.md`](docs/PHASE19_PRODUCTION_VERIFICATION.md), [`docs/PHASE20_AUTH_HARDENING.md`](docs/PHASE20_AUTH_HARDENING.md), [`docs/PHASE21_REMEDIATION.md`](docs/PHASE21_REMEDIATION.md)
 
 ---
 
-## 4. Database Schema & Collections (13 Collections)
+## 5. Verification Status (Observed on 2026-11-11)
 
-| Collection | Model File | Purpose | Primary Fields | Key Indexes |
-|---|---|---|---|---|
-| `users` | `User.js` | User accounts & permissions | `name`, `email`, `password`, `role`, `authVersion`, `passwordResetTokenHash`, `passwordResetExpires` | `{ email: 1 }` (unique) |
-| `notices` | `Notice.js` | Announcements & circulars | `title`, `content`, `category`, `date`, `status`, `attachments`, `pinned` | `{ deletedAt: 1, status: 1, createdAt: -1 }` |
-| `events` | `Event.js` | School calendar & events | `title`, `description`, `date`, `location`, `image`, `status` | `{ deletedAt: 1, status: 1, date: 1 }` |
-| `facilities` | `Facility.js` | Campus infrastructure | `name`, `description`, `category`, `image`, `features`, `status` | `{ deletedAt: 1, status: 1 }` |
-| `activities` | `Activity.js` | Co-curricular programs | `title`, `description`, `category`, `image`, `status` | `{ deletedAt: 1, status: 1 }` |
-| `achievements` | `Achievement.js` | Student & school honors | `title`, `recipient`, `date`, `description`, `image`, `status` | `{ deletedAt: 1, status: 1 }` |
-| `galleryimages` | `GalleryImage.js` | Media & photo gallery | `title`, `caption`, `category`, `url`, `publicId`, `status` | `{ deletedAt: 1, status: 1 }` |
-| `sitesettings` | `SiteSettings.js` | Global school configuration | `schoolName`, `address`, `phone`, `email`, `heroTitle`, `heroImage`, `principal*`, `director*` | Standard `_id` |
-| `pagecontents` | `PageContent.js` | Dynamic page text blocks | `pageKey`, `sections`, `seoTitle`, `seoDescription` | `{ pageKey: 1 }` (unique) |
-| `contactmessages` | `ContactMessage.js` | Inbound visitor inquiries | `name`, `email`, `phone`, `subject`, `message`, `read`, `archived` | `{ createdAt: -1 }` |
-| `activitylogs` | `ActivityLog.js` | Audit trail for actions | `action`, `resourceType`, `resourceId`, `userId`, `userEmail`, `meta` | `{ createdAt: -1 }`, `{ resourceType: 1, resourceId: 1 }` |
-| `media` | `Media.js` | Cloudinary asset tracking | `url`, `publicId`, `originalName`, `mimeType`, `size`, `folder` | `{ createdAt: -1 }` |
-| `facebooksyncs` | `FacebookSync.js` | Social import/publish logs | `kind`, `externalId`, `status`, `payload`, `error` | `{ kind: 1, createdAt: -1 }` |
+All checks below were executed directly against the repository at commit `ea2c9b8`:
+
+| Check / Suite | Command | Result | Notes |
+| :--- | :--- | :--- | :--- |
+| **Primary Backend Suite** | `npm test` (in `backend/`) | **141 PASS, 0 FAIL** | Phase 18C Unit (`40/40`), Phase 18C Integration (`49/49`), Phase 21 Regression (`33/33`), Lockout & Audit (`19/19`) |
+| **Resend Email Unit Suite** | `node tests/resend.unit.mjs` | **5 PASS, 0 FAIL** | Verified missing key error, password reset, security alert, inquiry email, and provider switch |
+| **Deployment Foundation** | `npm run test:foundation` | **20 PASS, 0 FAIL** | Verified seed guards, multi-origin CORS, env isolation |
+| **RBAC Smoke Suite** | `npm run test:rbac` | **PASS** | All authorization smoke assertions passed |
+| **Phase 20 Integration** | `node tests/phase-20.integration.mjs` | **20 PASS, 0 FAIL** | Registration closure, RBAC, password reset & notification |
+| **Phase 20 Bootstrap** | `node tests/phase-20.bootstrap.mjs` | **12 PASS, 0 FAIL** | Concurrency-bounded first-admin registration lock |
+| **Phase 20 Unit (Legacy)** | `node tests/phase-20.unit.mjs` | **17 PASS, 3 FAIL** | **Needs test update:** lines 46–55 still assert legacy `saugatb40@gmail.com` bootstrap email instead of `ivanbhattarai042@gmail.com`, and lines 108–110 test `"resend"` expecting it to be unsupported even though Resend is now supported |
+| **Frontend Lint** | `npm run lint` (`oxlint src`) | **0 errors, 2 warnings** | Pre-existing React `set-state-in-effect` warnings in `AdminLogin.jsx:21` and `ActivityLogs.jsx:49` across 91 files |
+| **Frontend Build** | `npm run build` (`vite build`) | **PASS** | Built `1962` modules cleanly in `1.19s` (`dist/assets/index-DenDaapL.js` `606.03 kB`, CSS `48.43 kB`) |
 
 ---
 
-## 5. REST API Route Directory
+## 6. Current Operational Status & Pending Actions
 
-All routes are mounted under `/api/*` in `backend/src/server.js`.
+### Working Today
+1. **Frontend & Backend Deployments:** Vercel frontend and Render backend (`GET /api/health` returning `200`, MongoDB connected) are live.
+2. **Clerk Auth & Organizations:** `ClerkProvider`, Google Sign-In, `OrganizationSwitcher`, `UserButton`, and `POST /api/auth/clerk-sync` are integrated with updated CSP rules.
+3. **Media Uploads:** Cloudinary credentials ping `ok` (`rate_limit_allowed: 500`), serving uploads cleanly today; Cloudflare R2 adapter automatically activates as soon as R2 keys are provided.
+4. **Email Architecture:** Resend adapter (`resendEmailAdapter.js`) is ready for `EMAIL_PROVIDER=resend` + `RESEND_API_KEY`.
 
-### 5.1 Public Endpoints
-* `GET /api/health` — Readiness probe (database connectivity status).
-* `GET /api/site-settings` — Public school metadata (read-only; unsaved fallback).
-* `GET /api/leadership` — Principal & Director public biographies and photos.
-* `GET /api/notices` — Published notices list (supports pagination & category filters).
-* `GET /api/notices/:id` — Detail view for a published notice.
-* `GET /api/events` — Upcoming and past school events.
-* `GET /api/events/:id` — Detail view for a specific event.
-* `GET /api/facilities` — List of school facilities and equipment.
-* `GET /api/activities` — Student clubs and co-curricular programs.
-* `GET /api/achievements` — Academic, athletic, and cultural awards.
-* `GET /api/gallery` — Photo gallery images (supports categories).
-* `GET /api/page-content/:pageKey` — Dynamic copy for specific static pages.
-* `POST /api/contact` — Inbound inquiry form submission (rate limited: 8/15min).
-
-### 5.2 Authentication & Account Management
-* `POST /api/auth/register` — Initial administrator bootstrap (closed once any user exists).
-* `POST /api/auth/login` — Account authentication (returns signed JWT + permissions).
-* `GET /api/auth/me` — Profile & permissions lookup for current session.
-* `POST /api/auth/forgot-password` — Password reset link request (rate limited: 5/15min).
-* `POST /api/auth/reset-password` — Password reset execution with single-use token.
-
-### 5.3 Administrative Content Management (RBAC Enforced)
-* `GET /api/:resource/admin/all` — All items including drafts, submitted, approved, and trashed.
-* `POST /api/:resource` — Create new content draft.
-* `GET /api/:resource/:id` — Fetch single record by ID.
-* `PUT /api/:resource/:id` — Update existing content item (resets to draft if re-review required).
-* `DELETE /api/:resource/:id` — Soft-delete item (moves to trash).
-* `POST /api/:resource/:id/restore` — Restore item from trash.
-* `DELETE /api/:resource/:id/permanent` — Permanently purge item and remove associated media.
-* `POST /api/:resource/:id/submit` — Submit draft for review.
-* `POST /api/:resource/:id/approve` — Approve submitted item (Admin only).
-* `POST /api/:resource/:id/publish` — Publish approved item to live site.
-* `POST /api/:resource/:id/unpublish` — Withdraw published item back to draft.
-* `POST /api/:resource/admin/bulk-publish` — Bulk publish multiple approved items.
-* `POST /api/:resource/admin/bulk-unpublish` — Bulk withdraw multiple published items.
-
-### 5.4 Management Subsystems
-* `GET /api/dashboard/stats` — Live counts (published, pending review, inquiries).
-* `GET /api/inbox/queue` — Consolidated review queue across all content types.
-* `GET /api/contact/messages` — Inbox of submitted contact messages.
-* `PATCH /api/contact/messages/:id/read` — Mark message as read/unread.
-* `POST /api/upload/image` — Upload image file to Cloudinary.
-* `POST /api/attachments/upload` — Upload PDF/DOCX/ZIP attachment with magic signature verification.
-* `GET /api/media` — Media library assets with pagination.
-* `GET /api/activity-logs` — Audit trail entries with filtering.
-* `GET /api/users` / `POST /api/users` / `PUT /api/users/:id` — Admin user management.
-* `POST /api/integrations/facebook/publish` — Push notice or event to Facebook Page.
-* `POST /api/ai/suggest` — Ephemeral AI text generator / copy editor.
-* `POST /api/ai/apply` — Human-gated application of AI suggestions.
+### Remaining Administrator / External Actions
+1. **Await Mercantile `.np` Domain Approval:** Stamped cover letter and institutional documents were submitted to `register.com.np`. Once approved, Cloudflare DNS records and Vercel/Cloudflare Pages domain verification will turn active with automatic SSL.
+2. **Sync Live SiteSettings Record in Admin CMS:** Open `/admin/site-settings` on the live site and save the verified details (`+977 9842089044, 9817361024`, `ivanbhattarai042@gmail.com`, `Belbari-05, Kaseni, Morang`, Principal `Ivan Bhattarai`) so the live MongoDB `sitesettings` document matches the frontend defaults, and trigger a Vercel redeploy of commit `ea2c9b8` (or latest `main`).
+3. **Activate Resend Key in Render:** Create a free API key at `resend.com` and set `EMAIL_PROVIDER=resend`, `RESEND_API_KEY=re_...`, and `ADMIN_NOTIFICATION_EMAIL=ivanbhattarai042@gmail.com` in Render Environment Variables.
+4. **Connect Facebook Connections (Optional):**
+   * Enable the **Facebook** Social Connection toggle in the Clerk Dashboard for 1-click Facebook admin login.
+   * Generate a Meta Graph API Page Access Token for Page ID `61554117025008` and add `FACEBOOK_PAGE_ID` + `FACEBOOK_PAGE_ACCESS_TOKEN` to Render (per [`docs/FACEBOOK_INTEGRATION_GUIDE.md`](docs/FACEBOOK_INTEGRATION_GUIDE.md)).
+5. **Cloudflare R2 (Optional):** If desired later, add a payment method in Cloudflare Billing to activate R2 free tier (10 GB), create bucket `kmes-school-media`, connect `media.kmes.edu.np`, and add `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` to Render.
+6. **Populate Real Campus Content:** Replace seed/Unsplash placeholder images and test user `test.editor.phase4@kmes.edu.np` via `/admin` (as flagged by `npm run audit:content`).
+7. **Update Stale Assertions in `backend/tests/phase-20.unit.mjs`:** Align bootstrap email test assertion and unknown-provider assertion with current `ivanbhattarai042@gmail.com` default and `resend` support so GitHub Actions CI passes `phase-20.unit.mjs`.
 
 ---
 
-## 6. Security & Hardening Controls
+## 7. Complete Repository Git History (`234206b` → `ea2c9b8`)
 
-1. **Authentication & Session Security:**
-   * JWT tokens signed with SHA-256 (`HS256`) and a minimum 32-character secret key.
-   * `authVersion` tracking forces immediate session termination across all devices upon password reset or role alteration.
-   * Bcrypt.js with 10 salt rounds used for all stored password hashes.
-   * Case-insensitive, whitespace-trimmed email normalization.
-2. **Input Sanitization & Injection Defense:**
-   * Universal sanitization middleware purges malicious MongoDB operators (`$`, `.`) from request payloads.
-   * Regex inputs escaped using `escapeRegex` to prevent ReDoS.
-   * Explicit URL protocol validator rejects `javascript:`, `data:`, or malformed URI schemes in all image and attachment fields.
-3. **MIME & Magic-Number File Upload Verification:**
-   * Media uploads are restricted by MIME type (`image/jpeg`, `image/png`, `image/webp`, `image/gif`).
-   * Document attachments (`.pdf`, `.docx`, `.zip`) are validated through header byte inspection (magic numbers), preventing renamed executables (`.exe` disguised as `.pdf`) from entering storage.
-4. **Rate Limiting:**
-   * Global API limiter: 300 requests per 15 minutes per IP.
-   * Authentication limiter: 20 requests per 15 minutes per IP.
-   * Contact inquiry limiter: 8 submissions per 15 minutes per IP.
-   * Password reset limiter: 5 requests per 15 minutes per IP.
-5. **CORS & HTTP Security Headers:**
-   * Strict origin allowlist supporting local dev, production domains, and controlled Vercel previews.
-   * Helmet middleware configured with Content Security Policy (CSP), anti-clickjacking (`X-Frame-Options: DENY`), and MIME-sniffing protection (`X-Content-Type-Options: nosniff`).
-
----
-
-## 7. Verification & Automated Test Status
-
-All automated suites are executed with zero external dependencies using in-memory databases and isolated test harnesses.
-
-```
-========================================================================
-Test Suite                             Scope                Result
-========================================================================
-npm test (Phase 18C + Phase 21)        Unit & Regression    33/33 PASS
-npm run test:foundation                Deployment Config    20/20 PASS
-npm run test:rbac                      Authorization Smoke  ALL PASS
-npm run test:phase20                   Bootstrap & Auth     52/52 PASS
-npm run audit:content                  Content Scan         PASS (13 items flagged)
-npm run lint (Frontend)                Oxlint (88 files)    0 Errors, 0 Warnings
-npm run build (Frontend)               Vite Production      1.05s Clean Build
-========================================================================
-TOTAL AUTOMATED TEST VERIFICATIONS:    105+ Passed (100% Green)
-========================================================================
-```
-
----
-
-## 8. Deployment & Operational Runbook
-
-### 8.1 Backend Deployment (e.g. Render / Heroku / Container)
-* **Configuration:** Defined in [`backend/render.yaml`](file:///C:/Users/Dell/OneDrive/Desktop/KMES%20FILES/kmes-school/backend/render.yaml).
-* **Required Environment Variables:**
-  * `NODE_ENV=production`
-  * `PORT=5000`
-  * `MONGODB_URI=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/kmes`
-  * `JWT_SECRET=<32+ random characters>`
-  * `ALLOWED_ORIGINS=https://kmes-school.vercel.app,https://www.schooldomain.com`
-  * `FRONTEND_URL=https://kmes-school.vercel.app`
-  * `RESET_LINK_BASE=https://kmes-school.vercel.app`
-  * `CLOUDINARY_CLOUD_NAME=<name>`
-  * `CLOUDINARY_API_KEY=<key>`
-  * `CLOUDINARY_API_SECRET=<secret>`
-  * `EMAIL_PROVIDER=smtp`
-  * `SMTP_HOST=<smtp.provider.com>`
-  * `SMTP_PORT=587`
-  * `SMTP_USER=<username>`
-  * `SMTP_PASSWORD=<password>`
-
-### 8.2 Frontend Deployment (Vercel)
-* **Configuration:** Defined in [`frontend/vercel.json`](file:///C:/Users/Dell/OneDrive/Desktop/KMES%20FILES/kmes-school/frontend/vercel.json).
-* **Required Build Environment Variable:**
-  * `VITE_API_BASE_URL=https://<your-backend-api-domain>`
-
----
-
-## 9. Content Audit Findings & Human Checklist
-
-The content audit utility (`npm run audit:content`) identified 13 placeholder or test records currently stored in the school database:
-
-| Category | Record / Identifier | Issue Detected | Action Required by Administrator |
-|---|---|---|---|
-| **Site Settings** | Global Settings | `phone: "+977-XXXXXXXXXX"` | Update with real school office phone in Admin → Site Settings |
-| **Site Settings** | Global Settings | `heroImage` uses Unsplash stock photo | Upload real school campus banner photo |
-| **Events** | "Annual Sports Day" | Description has placeholder text | Update event description with actual program schedule |
-| **Events** | "Annual Sports Day" | Image uses Unsplash stock photo | Upload genuine photo from school sports meet |
-| **Facilities** | "Classrooms" | Description has placeholder text; missing image | Add real description and photograph of classrooms |
-| **Facilities** | "Library" | Description has placeholder text; missing image | Add real description and photograph of library |
-| **Facilities** | "Computer Lab" | Description has placeholder text; missing image | Add real description and photograph of computer lab |
-| **Achievements** | "School Achievement" | Description has placeholder text | Enter real academic/extracurricular achievement record |
-| **Gallery** | "Campus View" | Uses Unsplash stock photo | Replace with actual high-resolution campus photo |
-| **Users** | `test.editor.phase4@kmes.edu.np` | Leftover test editor account | Delete from Admin → Users if no longer in use |
-
----
-
-## 10. Repository Git Log (1st to Last)
-
-```
+```text
 234206b chore: initial commit of KMES school website
 3308fb2 feat: harden production authentication and health checks
 36e9e27 docs: add Phase 18B report
@@ -367,118 +268,21 @@ c5e6850 docs: add comprehensive project documentation from 1st to last (KMES_COM
 b58e92b docs: expand master report with configuration checklist and advanced UI/UX roadmap
 eb58f35 docs: integrate master documentation into root README.md from 1st to last
 dd3135d feat(ui-ux): add emergency alert bar, floating quick contact, card skeleton loaders, and digital admission voucher slip
+8256677 docs: sync git log in README and KMES_COMPLETE_PROJECT_REPORT
+1c57d27 fix(render): add root endpoint to resolve 404 on health pings and patch security vulnerabilities
+fd06b6d fix(deps): remove nodemon in favor of native node --watch and eliminate all 3 high severity vulnerabilities
+530fd8d fix(accessibility): link htmlFor labels, add id/name attributes in LeadershipManager, and permit unsafe-eval in CSP
+abde663 feat(security): add 1mb body limits and constant-time password comparison to prevent timing attacks
+507596d feat(security): implement 5-attempt account lockout and audit logging for notices and users
+6f02188 fix(auth): add clear diagnostic logs and UI guidance for password reset email delivery
+72088e9 fix(env): update default admin bootstrap email to ivanbhattarai042@gmail.com
+c983b73 docs: add comprehensive Facebook Integration and Automation Guide
+bc2511c feat(domain): add kmes.com.np CORS whitelist, sitemap, and domain setup guide
+99bc0ff feat(auth): integrate Clerk authentication with Google sign-in and dual JWT support
+4fb1440 feat(clerk): enable organizations and add OrganizationSwitcher to admin navbar
+454539b feat(storage): replace Cloudinary with Cloudflare R2 object storage for media and attachments
+bbc5225 docs: add official Mercantile Communications cover letter template for kmes.com.np
+e2c17ce feat(content): update verified school contact details, parse multi-phone numbers, and refine seed descriptions
+8c3783f feat(email): integrate Resend email service for fast password resets and automated inquiry notifications to ivanbhattarai042@gmail.com
+ea2c9b8 feat(integrations): fix Clerk login runtime state, add CSP for Clerk/Cloudflare, enable Cloudflare Pages _redirects, and finalize Resend email provider
 ```
-
----
-
-## 11. Production Configuration Checklist (What is Left to Configure)
-
-To transition from local staging to a live public portal, the following configuration steps must be performed:
-
-### 11.1 Infrastructure & Database Connectivity
-1. **MongoDB Atlas Authentication & Access List:**
-   * **Problem:** Current local `.env` credentials returned `MongoServerError: bad auth : authentication failed`.
-   * **Fix:** In the [MongoDB Atlas Console](https://cloud.mongodb.com):
-     * Navigate to **Database Access** → verify or reset the password for `saugat97120_db_user` (or create a dedicated production database user, e.g. `kmes_prod_user`).
-     * Navigate to **Network Access** → ensure your IP and the hosting provider's egress IP (or `0.0.0.0/0` with strong password auth) are allowed.
-     * Update `MONGODB_URI` in `backend/.env` and your deployment platform's environment variables.
-2. **Cloudinary Key Rotation:**
-   * In [Cloudinary Console](https://console.cloudinary.com) → **Settings** → **Security**, generate a new API Secret.
-   * Update `CLOUDINARY_API_SECRET` in production secrets to ensure historical chat exposure cannot be exploited.
-3. **Production SMTP Email Provider:**
-   * For automated password reset delivery, configure a real transactional email provider (e.g. Brevo free tier with 300 emails/day, Resend, SendGrid, or Google Workspace App Password for `info@kmes.edu.np`).
-   * Set:
-     ```env
-     EMAIL_PROVIDER=smtp
-     SMTP_HOST=smtp.brevo.com
-     SMTP_PORT=587
-     SMTP_SECURE=false
-     SMTP_USER=your-smtp-login
-     SMTP_PASSWORD=your-smtp-key
-     EMAIL_FROM=info@kmes.edu.np
-     EMAIL_FROM_NAME="Kaseni Model Secondary English School"
-     ```
-
-### 11.2 Hosting & Domain Configuration
-1. **Frontend Deployment on Vercel:**
-   * Import the GitHub repository `saugat97120-eng/kmes-school`, selecting the `frontend` root directory.
-   * Set the environment variable:
-     ```env
-     VITE_API_BASE_URL=https://api.yourdomain.com  # or Render backend URL
-     ```
-2. **Backend Deployment on Render (or Railway / VPS):**
-   * Link the repository using `backend` as the root directory (matching [`backend/render.yaml`](file:///C:/Users/Dell/OneDrive/Desktop/KMES%20FILES/kmes-school/backend/render.yaml)).
-   * Align CORS origins:
-     ```env
-     ALLOWED_ORIGINS=https://kmes-school.vercel.app,https://www.yourdomain.edu.np
-     FRONTEND_URL=https://www.yourdomain.edu.np
-     RESET_LINK_BASE=https://www.yourdomain.edu.np
-     TRUST_PROXY=1
-     ALLOW_VERCEL_PREVIEWS=false
-     ```
-3. **Custom Domain Setup (.edu.np):**
-   * Register the official free school domain via [Mercantile Communications Nepal (.np Domain Registration)](https://register.com.np/) for educational institutions (e.g. `kmes.edu.np` or `kasenischool.edu.np`).
-   * Add CNAME / A records pointing `www` and root to Vercel, and `api` subdomain to Render.
-
-### 11.3 Production Bootstrap & Content Population
-1. **First Admin Provisioning:**
-   * Set `ALLOW_ADMIN_BOOTSTRAP=true` and `ADMIN_BOOTSTRAP_EMAIL=saugatb40@gmail.com` during the first deploy.
-   * Access `/admin/login` or register the first administrator account.
-   * Immediately toggle `ALLOW_ADMIN_BOOTSTRAP=false` in Render to permanently lock public registration.
-2. **School Content & Asset Replacement:**
-   * Replace `+977-XXXXXXXXXX` with the official school telephone/mobile numbers in Admin → Site Settings.
-   * Replace placeholder Unsplash photos with authentic photos taken at the Kaseni campus (classroom buildings, science laboratory, computer lab, sports field, library, and faculty).
-   * Upload the official academic calendar (Bikram Sambat: Baishakh to Chaitra), school prospectus, and admission guidelines in the Attachments area.
-
----
-
-## 12. Strategic Roadmap: Making KMES a World-Class, User-Friendly School Portal
-
-To make the KMES portal truly exceptional, intuitive, and culturally tailored for students, teachers, and parents in Nepal, the following advanced UI/UX and feature enhancements are recommended:
-
-### 12.1 Localization & Cultural Usability (Nepal-Centric)
-* **Bilingual Support (English & नेपाली Toggle):**
-  * *Why:* While students learn in English medium, many parents and community members in Kaseni prefer reading notices, circulars, and admission criteria in Nepali.
-  * *Implementation:* Add a lightweight top-bar language toggle (`EN | नेपाली`) with translated UI labels and dual-language notice fields.
-* **Bikram Sambat (B.S.) Calendar & Date Integration:**
-  * *Why:* Nepalese academic calendars, examination schedules, fee deadlines, and holidays run strictly on the Bikram Sambat calendar (e.g., 2081/2082 B.S.).
-  * *Implementation:* Display Nepali dates (`मिति: २०८१ बैशाख १५`) alongside Gregorian dates on notice cards, event banners, and admission deadlines. Include a mini school calendar widget marking holidays and exam routines.
-* **Emergency Notice Marquee & WhatsApp / Viber Quick-Action Button:**
-  * *Why:* Real-world school operations frequently require immediate announcements (e.g., weather-related closures, transportation changes, unexpected holiday declarations).
-  * *Implementation:* Add an urgent alert top-ticker that can be activated from the admin panel with one click, plus a floating WhatsApp/Viber button linking directly to the school administration desk.
-
-### 12.2 Advanced UI/UX & Visual Polish
-* **Fluid Micro-Interactions & Skeleton Loading:**
-  * Replace static loading spinners with shimmering skeleton cards matching the dimensions of notices, events, and gallery thumbnails to make data fetching feel instant.
-  * Add subtle entrance animations (fade-in-up) on scroll using CSS or lightweight Framer Motion.
-* **Interactive Media Gallery with Video & Filterable Albums:**
-  * Organize gallery images into thematic albums (e.g., *Annual Sports Meet 2081*, *Saraswati Puja Celebration*, *Science & Arts Exhibition*, *Classroom Moments*).
-  * Enable YouTube/Vimeo video embeds for school cultural performances and annual day speeches.
-* **Student & Teacher Virtual Campus Tour:**
-  * An interactive facility showcase with high-definition panoramas, highlighting lab equipment, smart classrooms, the playground, and the school library.
-* **Accessible Dark / Light Mode with High Contrast:**
-  * Ensure high contrast for readability outdoors under bright sunlight and eye comfort during evening reading.
-
-### 12.3 Academic & Administrative Self-Service
-* **Digital Online Admission & Inquiry System:**
-  * Replace the basic contact form with an interactive step-by-step student admission application.
-  * Allow parents to input student details, select target grade (Nursery to Grade 10), upload birth certificate or previous grade marksheet, and receive a downloadable PDF confirmation slip with a Tracking ID.
-* **Digital Fee Structure & Payment Information Guide:**
-  * Provide a transparent, downloadable fee structure per class.
-  * Include verified bank account details and downloadable QR codes for mobile banking (Fonepay, eSewa, Khalti) alongside clear instructions for remote fee settlement.
-* **Parent & Student Resource Download Center:**
-  * A dedicated download center for exam routines, holiday lists, textbook lists, syllabus outlines, and leave application forms in PDF format.
-* **Progressive Web App (PWA) Offline Access:**
-  * Register a Service Worker to cache the latest published notices, emergency contacts, and calendar offline. Parents on intermittent mobile data can access vital school numbers and notices without internet access.
-
-### 12.4 CMS & Content Authoring Enhancements
-* **Rich Text (WYSIWYG) Editor for Notices:**
-  * Integrate TipTap or Quill editor in the admin panel so administrators can format announcements with bold headers, bulleted lists, links, and embedded tables without writing markdown.
-* **Automatic Client-Side Image Compression:**
-  * Implement client-side image compression (e.g. `browser-image-compression`) before uploading to Cloudinary, ensuring school staff on mobile devices can upload 10MB phone camera photos without exceeding bandwidth or slowing down the server.
-* **SMS & Notification Gateway Hooks:**
-  * Add an optional webhook integration (e.g., Sparrow SMS or Aakash SMS in Nepal) to broadcast critical notice titles to registered parent phone numbers.
-
----
-
-*End of Comprehensive Project Documentation. All tests green, tree clean, and synchronized with remote main.*
