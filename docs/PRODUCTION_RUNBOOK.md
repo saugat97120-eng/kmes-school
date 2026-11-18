@@ -65,7 +65,9 @@ Backend (see `backend/.env.example` for the full list):
 | `TRUST_PROXY` | Yes | `1` on Render (rate-limit client IP) |
 | `ALLOW_ADMIN_BOOTSTRAP` | No | literal `"true"` only; keep `false` |
 | `ADMIN_BOOTSTRAP_EMAIL` | No | first-admin email (`saugatb40@gmail.com`) |
-| `EMAIL_PROVIDER` | No | `mock` (default) / `smtp` / `none` |
+| `EMAIL_PROVIDER` | Yes in production | `resend` or `smtp` (mock/none are non-production only) |
+| `RESEND_API_KEY` | Required for Resend | server-side secret |
+| `ALLOW_VERCEL_PREVIEWS` | No | `false` (preview origins denied by default) |
 | `SMTP_HOST`,`SMTP_PORT`,`SMTP_SECURE`,`SMTP_USER`,`SMTP_PASSWORD`,`EMAIL_FROM`,`EMAIL_FROM_NAME` | only for smtp | HOST+USER+PASSWORD all required when `smtp` |
 | `CLOUDINARY_*`, `FACEBOOK_*`, `AI_*` | No | optional; safe per-request 400 when unset |
 
@@ -108,12 +110,13 @@ Frontend: only `VITE_API_BASE_URL` (public, non-secret). Never put secrets in
 
 ## 6. SMTP
 
-- `EMAIL_PROVIDER=mock` (dev/test, in-memory), `none` (safe no-op), `smtp`
-  (Nodemailer). Unsupported values fail startup; `smtp` without
-  HOST/USER/PASSWORD fails startup (no silent mock fallback).
-- Never log/commit `SMTP_PASSWORD`. `SMTP_PASS` is a back-compat alias.
-- To go live: configure real relay values, set `EMAIL_PROVIDER=smtp`, then send
-  one real forgot-password email to verify delivery.
+- `mock` and `none` are for development/test/staging only. Production must use
+  `resend` or `smtp`; startup refuses mock/no-op email so reset links cannot
+  silently disappear or be exposed through logs.
+- Resend requires `RESEND_API_KEY`; SMTP requires HOST/USER/PASSWORD.
+- Never log/commit email provider credentials or password-reset URLs.
+- To go live: configure a real provider, then send one real forgot-password
+  email to verify delivery.
 
 ---
 

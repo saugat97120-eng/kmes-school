@@ -1,29 +1,31 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useLocation, Navigate } from "react-router-dom";
-import { useUser, SignInButton } from "@clerk/react";
+import { useUser, useAuth, SignInButton } from "@clerk/react";
 import { api, setSession, isAuthenticated } from "./api";
 import { API_BASE } from "../config";
 
 const HAS_CLERK = Boolean(import.meta.env.VITE_CLERK_PUBLISHABLE_KEY);
 
 function ClerkLoginSection({ onSyncSuccess, onError }) {
-  const { user: clerkUser, isSignedIn } = useUser();
+  const { isSignedIn } = useUser();
+  const { getToken } = useAuth();
   const syncingRef = useRef(false);
   const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
-    if (isSignedIn && clerkUser && !syncingRef.current) {
-      const email = clerkUser.primaryEmailAddress?.emailAddress;
-      const name = clerkUser.fullName || clerkUser.firstName || "School Admin";
-      const clerkUserId = clerkUser.id;
-      if (email) {
-        syncingRef.current = true;
-        setSyncing(true);
-        fetch(`${API_BASE}/auth/clerk-sync`, {
+    if (isSignedIn && !syncingRef.current) {
+      syncingRef.current = true;
+      setSyncing(true);
+      getToken().then((sessionToken) => {
+        if (!sessionToken) throw new Error("Unable to verify your Clerk session. Please sign in again.");
+        return fetch(`${API_BASE}/api/auth/clerk-sync`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, name, clerkUserId }),
-        })
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${sessionToken}`,
+          },
+        });
+      })
           .then((r) => r.json())
           .then((data) => {
             setSyncing(false);
@@ -39,9 +41,8 @@ function ClerkLoginSection({ onSyncSuccess, onError }) {
             onError(err.message || "Network error during Clerk sync");
             syncingRef.current = false;
           });
-      }
     }
-  }, [isSignedIn, clerkUser, onSyncSuccess, onError]);
+  }, [isSignedIn, getToken, onSyncSuccess, onError]);
 
   return (
     <div className="mt-6">
@@ -95,6 +96,12 @@ function AdminLogin() {
 
   const navigate = useNavigate();
   const location = useLocation();
+  const handleClerkSyncSuccess = useCallback((token, user) => {
+    setSession(token, user);
+    const redirectTo = location.state?.from || "/admin";
+    navigate(redirectTo, { replace: true });
+  }, [location.state?.from, navigate]);
+  const handleClerkError = useCallback((message) => setError(message), []);
 
   if (isAuthenticated()) {
     return <Navigate to="/admin" replace />;
@@ -152,12 +159,8 @@ function AdminLogin() {
 
         {HAS_CLERK && !isForgot && (
           <ClerkLoginSection
-            onSyncSuccess={(token, user) => {
-              setSession(token, user);
-              const redirectTo = location.state?.from || "/admin";
-              navigate(redirectTo, { replace: true });
-            }}
-            onError={(msg) => setError(msg)}
+            onSyncSuccess={handleClerkSyncSuccess}
+            onError={handleClerkError}
           />
         )}
 

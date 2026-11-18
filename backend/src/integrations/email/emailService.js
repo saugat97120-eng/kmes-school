@@ -69,6 +69,11 @@ export function assertEmailProviderConfiguration() {
       `Unsupported EMAIL_PROVIDER '${process.env.EMAIL_PROVIDER}'. Supported: ${SUPPORTED_PROVIDERS.join(", ")}.`
     );
   }
+  // Password-reset links are intentionally never printed to logs. Production
+  // must therefore use a real delivery provider rather than mock/no-op mode.
+  if (process.env.NODE_ENV === "production" && (provider === "mock" || provider === "none")) {
+    throw new Error("Production requires EMAIL_PROVIDER=resend or EMAIL_PROVIDER=smtp so security emails are delivered.");
+  }
   if (provider === "smtp") {
     const missing = [];
     if (!process.env.SMTP_HOST) missing.push("SMTP_HOST");

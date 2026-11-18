@@ -1,8 +1,8 @@
 import express from "express";
-import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { body, validationResult } from "express-validator";
+import { clerkClient } from "@clerk/express";
 import User from "../models/User.js";
 import { requireAuth } from "../middleware/auth.js";
 import { getPermissionsForRole } from "../permissions.js";
@@ -121,19 +121,11 @@ router.post(
             resetToken,
             resetClientUrl: buildResetLink(resetToken),
           });
-          if (env.emailProvider === "mock" || !process.env.SMTP_HOST) {
-            console.log(`\n======================================================`);
-            console.log(`[PASSWORD RESET LINK GENERATED]`);
-            console.log(`To: ${email}`);
-            console.log(`Link: ${buildResetLink(resetToken)}`);
-            console.log(`NOTE: Real Gmail delivery requires EMAIL_PROVIDER=smtp and Gmail SMTP credentials in Render.`);
-            console.log(`======================================================\n`);
-          }
-        } catch (err) {
-          console.error("Password reset email delivery failed:", err.message);
+        } catch {
+          // Do not log provider payloads or URLs: some providers include request
+          // details in errors, and reset links contain a live bearer token.
+          console.error("[email] Password reset delivery failed");
         }
-      } else {
-        console.warn(`[PASSWORD RESET] Request received for UNREGISTERED email: ${email}`);
       }
 
       return res.status(200).json(GENERIC_RESET_RESPONSE);
@@ -442,64 +434,51 @@ router.get("/me", requireAuth, async (req, res, next) => {
 });
 
 // POST /api/auth/clerk-sync
-// Synchronize Clerk authenticated user with MongoDB user store and return app session
+// The request must carry a Clerk session verified by clerkMiddleware. User
+// profile details are fetched from Clerk's backend API, never trusted from the
+// browser. Clerk login can link only to an already provisioned KMES user.
 router.post("/clerk-sync", async (req, res, next) => {
   try {
-    const rawEmail = req.body.email;
-    const email = rawEmail ? String(rawEmail).trim().toLowerCase() : "";
-    const name = (req.body.name || "School Staff").trim();
-    const clerkUserId = req.body.clerkUserId;
-
-    if (!email) {
-      return res.status(400).json({ success: false, message: "Email is required for Clerk synchronization" });
+    const clerkAuth = typeof req.auth === "function" ? req.auth() : null;
+    if (!clerkAuth?.userId || !env.clerkSecretKey) {
+      return res.status(401).json({ success: false, message: "A valid Clerk session is required" });
     }
 
-    let user = await User.findOne({
-      $or: [
-        { email },
-        ...(clerkUserId ? [{ clerkUserId }] : []),
-      ],
-    });
+    const clerkUser = await clerkClient.users.getUser(clerkAuth.userId);
+    const primaryEmail = clerkUser.emailAddresses?.find(
+      (item) => item.id === clerkUser.primaryEmailAddressId
+    );
+    const email = String(primaryEmail?.emailAddress || "").trim().toLowerCase();
+    const emailVerified = primaryEmail?.verification?.status === "verified";
+    if (!email || !emailVerified) {
+      return res.status(403).json({ success: false, message: "A verified primary email is required" });
+    }
 
+    const userByClerkId = await User.findOne({ clerkUserId: clerkAuth.userId });
+    const userByEmail = await User.findOne({ email });
+    if (userByClerkId && userByEmail && String(userByClerkId._id) !== String(userByEmail._id)) {
+      return res.status(403).json({ success: false, message: "This Clerk identity is not linked to the KMES account" });
+    }
+
+    const user = userByClerkId || userByEmail;
     if (!user) {
-      // First user or authorized admin emails become 'admin', others 'editor'
-      const totalUsers = await User.countDocuments();
-      const isAdminEmail =
-        email === "saugat97120@gmail.com" ||
-        email === "ivanbhattarai042@gmail.com" ||
-        email === env.adminBootstrapEmail.toLowerCase();
-      const role = totalUsers === 0 || isAdminEmail ? "admin" : "editor";
-
-      user = await User.create({
-        name,
-        email,
-        role,
-        clerkUserId: clerkUserId || null,
-        password: crypto.randomBytes(32).toString("hex"),
-      });
-
-      await logActivity({
-        userId: user._id,
-        userName: user.name,
-        action: "create",
-        resourceType: "users",
-        resourceId: user._id,
-        resourceLabel: `${user.name} (${user.role}) [Clerk]`,
-      });
-    } else {
-      let needsSave = false;
-      if (clerkUserId && user.clerkUserId !== clerkUserId) {
-        user.clerkUserId = clerkUserId;
-        needsSave = true;
-      }
-      if (name && name !== "School Staff" && user.name !== name) {
-        user.name = name;
-        needsSave = true;
-      }
-      if (needsSave) {
-        await user.save();
-      }
+      return res.status(403).json({ success: false, message: "This account is not authorized for the KMES administration system" });
     }
+    if (user.clerkUserId && user.clerkUserId !== clerkAuth.userId) {
+      return res.status(403).json({ success: false, message: "This KMES account is linked to a different sign-in identity" });
+    }
+
+    let needsSave = false;
+    if (!user.clerkUserId) {
+      user.clerkUserId = clerkAuth.userId;
+      needsSave = true;
+    }
+    const verifiedName = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ").trim();
+    if (verifiedName && user.name !== verifiedName) {
+      user.name = verifiedName;
+      needsSave = true;
+    }
+    if (needsSave) await user.save();
 
     await logActivity({
       userId: user._id,
@@ -510,11 +489,7 @@ router.post("/clerk-sync", async (req, res, next) => {
       resourceLabel: `${user.name} (${user.role}) [Clerk Login]`,
     });
 
-    res.json({
-      success: true,
-      token: signToken(user),
-      user: publicUser(user),
-    });
+    return res.json({ success: true, token: signToken(user), user: publicUser(user) });
   } catch (err) {
     next(err);
   }

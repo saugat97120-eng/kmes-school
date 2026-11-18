@@ -24,7 +24,6 @@ kmes-school/
 │   ├── public/                     # _headers, _redirects, robots.txt, sitemap.xml
 │   ├── src/                        # Public pages, admin CMS, hooks, contexts
 │   └── vercel.json                 # Vercel CSP headers & SPA rewrites
-├── backup/                         # Point-in-time JSON database snapshots
 └── docs/                           # Guides, runbooks, and domain verification docs
     ├── DOMAIN_SETUP_GUIDE.md          # Custom domain setup guide (kmes.edu.np)
     ├── MERCANTILE_COVER_LETTER.md     # Official .np domain application cover letter template
@@ -74,9 +73,9 @@ flowchart TD
 ```
 
 * **Backend (`backend/src/server.js`):** Layered REST API supporting dual authentication (`@clerk/express` + JWT `authVersion`), RBAC permissions, brute-force account lockout (`5` failed attempts → 15-minute `423` lock), IP rate limits, binary file signature validation, and strict CORS allowlists (including `kmes.edu.np` and `www.kmes.edu.np`).
-* **Frontend (`frontend/src/App.jsx`):** Responsive React 19 SPA with Clerk Google Sign-In, Organization switching, Emergency Alert Bar, Floating Quick Contact (WhatsApp + multi-phone `tel:` parsing), skeleton loaders, and an interactive Online Admission Inquiry slip (`KMES-YYYY-XXXX`). Deployable on both Vercel (`frontend/vercel.json`) and Cloudflare Pages (`frontend/public/_headers`, `frontend/public/_redirects`).
+* **Frontend (`frontend/src/App.jsx`):** Responsive React 19 SPA with Clerk Google Sign-In, Organization switching, Emergency Alert Bar, Floating Quick Contact (WhatsApp + multi-phone `tel:` parsing), skeleton loaders, and an interactive Online Admission Inquiry slip with a server-generated tracking reference. Deployable on both Vercel (`frontend/vercel.json`) and Cloudflare Pages (`frontend/public/_headers`, `frontend/public/_redirects`).
 * **Media Storage:** Hybrid storage adapter supporting **Cloudflare R2** (`backend/src/config/r2.js`, custom domain `media.kmes.edu.np`) with transparent fallback to **Cloudinary**.
-* **Email Delivery:** **Resend** REST adapter (`backend/src/integrations/email/resendEmailAdapter.js`) plus **Nodemailer SMTP** adapter for password resets, security alerts, and automated website inquiry/admission emails to `ivanbhattarai042@gmail.com`.
+* **Email Delivery:** **Resend** REST adapter (`backend/src/integrations/email/resendEmailAdapter.js`) plus **Nodemailer SMTP** adapter for password resets, security alerts, and automated website inquiry/admission emails. Production requires a real email provider; reset links are never written to logs.
 
 ---
 
@@ -130,7 +129,7 @@ Suites run offline with isolated in-memory databases (`mongodb-memory-server`):
 ```bash
 # Backend Tests
 cd backend
-npm test                         # Phase 18C Unit (40), 18C Integration (49), Phase 21 Regression (33), Lockout & Audit (19) -> 141 PASS, 0 FAIL
+npm test                         # Phase 18C Unit (41), 18C Integration (49), Phase 21 Regression (33), Lockout & Audit (19) -> 141 PASS, 0 FAIL
 node tests/resend.unit.mjs       # Resend email adapter & inquiry notification checks -> 5 PASS, 0 FAIL
 npm run test:foundation          # Deployment config & seed safety checks -> 20 PASS, 0 FAIL
 npm run test:rbac                # Role-based authorization smoke tests -> PASS
@@ -220,3 +219,8 @@ ea2c9b8 feat(integrations): fix Clerk login runtime state, add CSP for Clerk/Clo
 ---
 
 *For the full detailed engineering report, API endpoints, verified checks, and chronological breakdown, see [`KMES_COMPLETE_PROJECT_REPORT.md`](KMES_COMPLETE_PROJECT_REPORT.md).*
+
+
+## Security remediation notes
+
+See [`docs/SECURITY_REMEDIATION.md`](docs/SECURITY_REMEDIATION.md) for the authentication, password-reset, admissions, Content Security Policy, and production configuration changes in this maintenance update. Do not include `.env` files, database backups, `node_modules`, build output, or production secrets in source-code archives.

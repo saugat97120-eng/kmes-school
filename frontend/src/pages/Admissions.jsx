@@ -51,6 +51,7 @@ function Admissions() {
     grade: "Grade 1",
     parentName: "",
     phone: "",
+    parentEmail: "",
     address: "",
     previousSchool: "",
   });
@@ -93,29 +94,19 @@ function Admissions() {
     }
 
     setSubmitting(true);
-    const trackingId = `KMES-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
-
     try {
-      const messagePayload = {
-        name: formData.parentName,
-        email: "ivanbhattarai042@gmail.com",
-        phone: formData.phone,
-        subject: `[ADMISSION INQUIRY] ${formData.grade} - ${formData.studentName}`,
-        message: `Student: ${formData.studentName} (${formData.gender})\nApplying for: ${formData.grade}\nParent/Guardian: ${formData.parentName}\nPhone: ${formData.phone}\nAddress: ${formData.address || "Kaseni"}\nPrevious School: ${formData.previousSchool || "N/A"}\nTracking ID: ${trackingId}`,
-      };
-
-      const res = await fetch(`${API_BASE}/api/contact`, {
+      const res = await fetch(`${API_BASE}/api/contact/admissions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(messagePayload),
+        body: JSON.stringify(formData),
       });
-
-      if (!res.ok) {
-        throw new Error("Unable to submit application inquiry. Please contact the school directly.");
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok || !result.success || !result.trackingId) {
+        throw new Error(result.message || "Unable to submit application inquiry. Please contact the school directly.");
       }
 
       setSubmittedSlip({
-        trackingId,
+        trackingId: result.trackingId,
         date: new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
         ...formData,
       });
@@ -232,7 +223,7 @@ function Admissions() {
               </div>
               <h3 className="mt-1 font-serif text-2xl font-bold text-navy">Submit Student Details</h3>
               <p className="mt-1 text-xs text-gray-500">
-                Submit this form to reserve your seat and receive an official KMES tracking voucher.
+Submit this form to send an admission inquiry and receive a KMES tracking voucher. Submission does not confirm admission or reserve a seat.
               </p>
 
               {formError && (
@@ -290,6 +281,11 @@ function Admissions() {
                   </div>
 
                   <div className="mt-5 rounded-lg bg-white p-3 text-xs text-gray-600 border border-green-100">
+                    <p className="font-semibold text-gray-900">Important:</p>
+                    This voucher confirms receipt of your inquiry only. It does not confirm admission or reserve a seat.
+                  </div>
+
+                  <div className="mt-3 rounded-lg bg-white p-3 text-xs text-gray-600 border border-green-100">
                     <p className="font-semibold text-gray-900">Next Step:</p>
                     Please visit the school administration office with this tracking reference or call{" "}
                     <strong>{settings.phone || "+977-9800000000"}</strong> to confirm counseling.
@@ -305,6 +301,7 @@ function Admissions() {
                         grade: "Grade 1",
                         parentName: "",
                         phone: "",
+                        parentEmail: "",
                         address: "",
                         previousSchool: "",
                       });
@@ -402,6 +399,23 @@ function Admissions() {
                         className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-navy focus:outline-none focus:ring-1 focus:ring-navy"
                       />
                     </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="parentEmail" className="block text-xs font-semibold text-gray-700">
+                      Parent / Guardian Email (Optional)
+                    </label>
+                    <input
+                      id="parentEmail"
+                      name="parentEmail"
+                      type="email"
+                      autoComplete="email"
+                      maxLength={254}
+                      value={formData.parentEmail}
+                      onChange={handleInputChange}
+                      placeholder="e.g. parent@example.com"
+                      className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-navy focus:outline-none focus:ring-1 focus:ring-navy"
+                    />
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-2">

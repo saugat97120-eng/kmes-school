@@ -76,7 +76,15 @@ assertEmailProviderConfiguration();
 
 app.use(
   helmet({
-    contentSecurityPolicy: false,
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'none'"],
+        baseUri: ["'none'"],
+        formAction: ["'none'"],
+        frameAncestors: ["'none'"],
+        objectSrc: ["'none'"],
+      },
+    },
     crossOriginResourcePolicy: { policy: "cross-origin" },
   })
 );
@@ -92,12 +100,10 @@ app.use(
       if (!origin || allowed.includes(origin) || KMES_CUSTOM_DOMAINS.has(origin)) {
         return callback(null, true);
       }
-      // Vercel preview deployments (kmes-school-<hash>-<team>.vercel.app).
-      // Anyone can create a Vercel project with a matching name, so this is a
-      // convenience, not a trust boundary: no cookies are used (auth is a
-      // Bearer token) so it cannot read credentials. Once every real frontend
-      // origin is listed in ALLOWED_ORIGINS, set ALLOW_VERCEL_PREVIEWS=false.
-      const previewsOn = process.env.ALLOW_VERCEL_PREVIEWS !== "false";
+      // Vercel preview deployments are an explicit opt-in. A matching project
+      // name is not an identity boundary, so production should list trusted
+      // origins in ALLOWED_ORIGINS and leave this disabled.
+      const previewsOn = process.env.ALLOW_VERCEL_PREVIEWS === "true";
       if (previewsOn && VERCEL_PREVIEW_ORIGIN.test(origin)) {
         return callback(null, true);
       }

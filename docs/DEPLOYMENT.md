@@ -58,7 +58,10 @@ Source of truth for variable **names**: `backend/.env.example` and
 | `AI_MODEL` | No | blank | test model | prod model |
 | `DEV_ADMIN_EMAIL` | No | dev value | *(unset)* | *(unset)* |
 | `DEV_ADMIN_PASSWORD` | **Yes** | dev value | *(unset)* | *(unset)* |
-| `EMAIL_PROVIDER` | No | `mock` | `mock`/sandbox | `smtp` (or `mock` until SMTP is ready) |
+| `EMAIL_PROVIDER` | No | `mock` | `mock`/sandbox | `resend` or `smtp` (required) |
+| `RESEND_API_KEY` | **Yes** when using Resend | blank | test key | production key |
+| `CLERK_SECRET_KEY` | **Yes** when Clerk SSO is enabled | dev Clerk key | staging Clerk key | production Clerk key |
+| `ALLOW_VERCEL_PREVIEWS` | No | `false` (explicit opt-in) | `false` (explicit opt-in) | `false` |
 | `SMTP_HOST` | No | blank | staging relay/sandbox | production relay |
 | `SMTP_PORT` | No | `587` | `587`/`465` | `587`/`465` |
 | `SMTP_SECURE` | No | `false` | `false`/`true` | `false`/`true` |
@@ -268,18 +271,15 @@ This phase ships **configuration separation only** — no outbound service calls
 - **AI:** production uses a server-side key; staging uses `mock`/a restricted key;
   development uses `mock`. AI output is suggestion-only and human-applied; the
   30s timeout and safe error codes are preserved.
-- **Email:** `EMAIL_PROVIDER=mock` (in-memory) or `none` (no-op) are the safe
-  defaults. `EMAIL_PROVIDER=smtp` (Phase 18C-4) enables real delivery via
-  Nodemailer and requires `SMTP_HOST` (+ `SMTP_PORT`, and both `SMTP_USER` and
-  `SMTP_PASS` together, or neither for an auth-less relay) plus an optional
-  `EMAIL_FROM`/`EMAIL_FROM_NAME`. If `SMTP_HOST` is missing at boot the server
-  logs a configuration warning; the forgot-password flow still returns its
-  **generic** response so account existence and tokens are never revealed.
-  `RESET_LINK_BASE` keeps reset delivery correctly scoped per environment.
+- **Email:** `mock` and `none` are development/test/staging-only modes. Production
+  requires `EMAIL_PROVIDER=resend` with `RESEND_API_KEY`, or `EMAIL_PROVIDER=smtp`
+  with the required SMTP settings. Production refuses to start with mock/no-op
+  email because password-reset links are never written to logs. `RESET_LINK_BASE`
+  keeps reset delivery correctly scoped per environment.
 
 None of these connect to any external provider from development/mock
-configurations. Only a fully configured integration (or `EMAIL_PROVIDER=smtp`
-with SMTP env) makes outbound calls.
+configurations. Only a fully configured integration (`EMAIL_PROVIDER=resend` or
+`smtp` in production) makes outbound email calls.
 
 ---
 
@@ -443,21 +443,21 @@ and `CLOUDINARY_*` credentials. Never share a cloud between environments.
 
 ---
 
-## 16. SMTP email delivery (Phase 18C-4 / Phase 20)
+## 16. Email delivery (SMTP / Resend)
 
-`EMAIL_PROVIDER=smtp` switches the backend to a Nodemailer `SmtpEmailAdapter`
-(`backend/src/integrations/email/smtpEmailAdapter.js`). Mock and no-op adapters
-are retained and remain the safe defaults.
+`EMAIL_PROVIDER=smtp` selects the Nodemailer adapter; `EMAIL_PROVIDER=resend`
+selects the Resend API adapter. Mock and no-op adapters are retained for local,
+test, and staging use only.
 
 - Configuration is **environment-only**: `SMTP_HOST`, `SMTP_PORT` (default 587;
   `SMTP_SECURE=true` or port 465 selects implicit TLS, everything else STARTTLS),
   `SMTP_USER`, `SMTP_PASSWORD` (with `SMTP_PASS` kept as a back-compat alias),
   `EMAIL_FROM` (falls back to `SMTP_USER`), `EMAIL_FROM_NAME` (default
   `Kaseni Model Secondary English School`).
-- Phase 20: supported providers are `mock | smtp | none`. **Any other value
-  fails startup** (no silent fallback, and SMTP can never silently degrade to
-  mock in production). When `EMAIL_PROVIDER=smtp`, `SMTP_HOST` + `SMTP_USER` +
-  `SMTP_PASSWORD` are all **required at boot**
+- Supported providers are `mock | smtp | resend | none`. **Any other value
+  fails startup**. Production also refuses `mock` and `none`. When
+  `EMAIL_PROVIDER=smtp`, `SMTP_HOST` + `SMTP_USER` + `SMTP_PASSWORD` are all
+  **required at boot**; when `EMAIL_PROVIDER=resend`, `RESEND_API_KEY` is required.
   (`assertEmailProviderConfiguration()` in `server.js`), so a half-configured
   SMTP relay cannot boot into a "never delivers" state.
 - `assertConfigured()` throws cleanly and **before** any network I/O when SMTP
@@ -469,12 +469,12 @@ are retained and remain the safe defaults.
   reset URL built from `RESET_LINK_BASE`.
 - Phase 20 adds a best-effort **security notification** email after a successful
   password reset (generic content only; failures never fail the reset itself).
-- Boot-time validation (`validateProductionConfiguration`) emits a category-only
-  warning when `EMAIL_PROVIDER=smtp` but required SMTP vars are unset, and when
-  `ALLOW_ADMIN_BOOTSTRAP=true` is left on in production.
+- Boot-time validation emits safe configuration warnings; provider assertions
+  stop production startup when email delivery is not configured.
 
-On Render, add the `SMTP_*`/`EMAIL_FROM*` values in the service Environment tab
-and set `EMAIL_PROVIDER=smtp`. Verify with a single real forgot-password email.
+On Render, configure either the `RESEND_API_KEY` and set `EMAIL_PROVIDER=resend`,
+  or add the `SMTP_*`/`EMAIL_FROM*` values and set `EMAIL_PROVIDER=smtp`. Verify
+  with a real forgot-password email before production release.
 
 ---
 

@@ -1,4 +1,5 @@
 import express from "express";
+import crypto from "node:crypto";
 import rateLimit from "express-rate-limit";
 import { body, validationResult } from "express-validator";
 import ContactMessage from "../models/ContactMessage.js";
@@ -17,6 +18,75 @@ const contactLimiter = rateLimit({
   legacyHeaders: false,
   message: { success: false, message: "Too many messages sent. Please try again later." },
 });
+
+
+// Dedicated admissions inquiry endpoint. It keeps the existing admin inbox
+// workflow while generating a server-side tracking reference and accepting
+// only explicitly allowed student/guardian fields.
+router.post(
+  "/admissions",
+  contactLimiter,
+  [
+    body("studentName").isString().trim().notEmpty().isLength({ max: 120 }),
+    body("gender").isIn(["Male", "Female", "Other"]),
+    body("grade").isString().trim().notEmpty().isLength({ max: 80 }),
+    body("parentName").isString().trim().notEmpty().isLength({ max: 100 }),
+    body("phone").isString().trim().notEmpty().isLength({ max: 30 }),
+    body("parentEmail").optional({ values: "falsy" }).trim().isEmail().isLength({ max: 254 }),
+    body("address").optional({ values: "falsy" }).isString().trim().isLength({ max: 250 }),
+    body("previousSchool").optional({ values: "falsy" }).isString().trim().isLength({ max: 150 }),
+  ],
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, errors: errors.array() });
+      }
+
+      const {
+        studentName, gender, grade, parentName, phone,
+        parentEmail = "", address = "", previousSchool = "",
+      } = req.body;
+      const trackingId = `KMES-${new Date().getFullYear()}-${crypto.randomBytes(8).toString("hex").toUpperCase()}`;
+      const subject = `[ADMISSION INQUIRY] ${grade} - ${studentName}`;
+      const message = [
+        `Student: ${studentName} (${gender})`,
+        `Applying for: ${grade}`,
+        `Parent/Guardian: ${parentName}`,
+        `Phone: ${phone}`,
+        `Parent email: ${parentEmail || "Not provided"}`,
+        `Address: ${address || "Not provided"}`,
+        `Previous School: ${previousSchool || "Not provided"}`,
+        `Tracking ID: ${trackingId}`,
+      ].join("\n");
+
+      await ContactMessage.create({
+        name: parentName,
+        email: parentEmail ? String(parentEmail).trim().toLowerCase() : "",
+        phone,
+        subject,
+        message,
+        trackingId,
+      });
+
+      sendInquiryNotification({
+        name: parentName,
+        email: parentEmail ? String(parentEmail).trim().toLowerCase() : "",
+        phone,
+        subject,
+        message,
+      }).catch((err) => console.warn(`[email] Failed to send admissions notification: ${err.message}`));
+
+      return res.status(201).json({
+        success: true,
+        message: "Admission inquiry received. This is not a confirmed enrollment or seat reservation.",
+        trackingId,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
 
 router.post(
   "/",
