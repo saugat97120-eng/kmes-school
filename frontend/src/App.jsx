@@ -62,8 +62,8 @@ function PublicLayout({ children }) {
 function App() {
   return (
     <SiteSettingsProvider>
-      <IStudentProvider>
-        <BrowserRouter>
+      <BrowserRouter>
+        <IStudentProvider>
           <ScrollToTop />
           <Routes>
           {/* Admin routes: separate layout, no public navbar/footer */}
@@ -202,8 +202,8 @@ function App() {
             </PublicLayout>
           } />
         </Routes>
+        </IStudentProvider>
       </BrowserRouter>
-      </IStudentProvider>
     </SiteSettingsProvider>
   );
 }

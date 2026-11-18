@@ -96,11 +96,19 @@ export default function IStudentModal({ isOpen, onClose }) {
 
   useEffect(() => {
     if (!isOpen) return;
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
     const handleKeyDown = (e) => {
       if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -110,18 +118,21 @@ export default function IStudentModal({ isOpen, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6"
+      className="fixed inset-0 z-[150] flex items-center justify-center p-4 sm:p-6"
       role="dialog"
       aria-modal="true"
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-navy/60 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-navy/70 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
 
       {/* Modal Dialog */}
-      <div className="relative w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden rounded-3xl bg-white shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-200">
+      <div
+        className="relative z-10 w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden rounded-3xl bg-white shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Top Header */}
         <div className="flex items-center justify-between border-b border-slate-100 bg-gradient-to-r from-navy via-navy-2 to-navy px-6 py-5 text-white">
           <div className="flex items-center gap-3">
@@ -138,14 +149,14 @@ export default function IStudentModal({ isOpen, onClose }) {
                 </span>
               </div>
               <p className="text-xs text-slate-300">
-                {settings.schoolName || "Kaseni Model Secondary English School"} • Belbari-05, Morang
+                {settings.schoolName || "Kaseni Model Secondary English School"} • {settings.address || "Kaseni, Nepal"}
               </p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition cursor-pointer"
             aria-label="Close portal"
           >
             <X size={20} />
@@ -169,7 +180,7 @@ export default function IStudentModal({ isOpen, onClose }) {
                 key={portal.title}
                 to={portal.to}
                 onClick={onClose}
-                className="group flex items-start gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 transition-all duration-200 hover:border-gold hover:bg-slate-50/60 hover:shadow-md"
+                className="group flex items-start gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 transition-all duration-200 hover:border-gold hover:bg-slate-50/60 hover:shadow-md cursor-pointer"
               >
                 <div
                   className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${portal.iconBg}`}
@@ -213,7 +224,7 @@ export default function IStudentModal({ isOpen, onClose }) {
             <Link
               to="/admissions"
               onClick={onClose}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-navy px-4 py-2 text-xs font-semibold text-white hover:bg-navy-2 transition"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-navy px-4 py-2 text-xs font-semibold text-white hover:bg-navy-2 transition cursor-pointer"
             >
               Apply Online <ArrowRight size={14} />
             </Link>
