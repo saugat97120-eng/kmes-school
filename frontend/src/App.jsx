@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import { SiteSettingsProvider } from "./context/SiteSettingsContext";
+import { IStudentProvider } from "./context/IStudentContext";
 import ScrollToTop from "./components/common/ScrollToTop";
 import TopBar from "./components/layout/TopBar";
 import Navbar from "./components/layout/Navbar";
@@ -61,9 +62,10 @@ function PublicLayout({ children }) {
 function App() {
   return (
     <SiteSettingsProvider>
-      <BrowserRouter>
-        <ScrollToTop />
-        <Routes>
+      <IStudentProvider>
+        <BrowserRouter>
+          <ScrollToTop />
+          <Routes>
           {/* Admin routes: separate layout, no public navbar/footer */}
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/reset-password" element={<ResetPassword />} />
@@ -201,6 +203,7 @@ function App() {
           } />
         </Routes>
       </BrowserRouter>
+      </IStudentProvider>
     </SiteSettingsProvider>
   );
 }

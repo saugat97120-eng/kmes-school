@@ -1,24 +1,42 @@
 import { IMAGE_FALLBACK, handleImageError } from "../../utils/format";
+import { Sparkles } from "lucide-react";
 
-function FacilityCard({ facility }) {
+export default function FacilityCard({ facility }) {
   return (
-    <article className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-      <div className="aspect-[4/3] overflow-hidden bg-gray-100">
-        <img
-          src={facility.image || IMAGE_FALLBACK}
-          alt={facility.title}
-          loading="lazy"
-          decoding="async"
-          onError={handleImageError}
-          className="h-full w-full object-cover"
-        />
+    <article className="deck-card group flex flex-col justify-between overflow-hidden transition-all duration-300">
+      <div>
+        <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
+          <img
+            src={facility.image || IMAGE_FALLBACK}
+            alt={facility.title}
+            loading="lazy"
+            decoding="async"
+            onError={handleImageError}
+            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+          />
+          <div className="absolute top-3 left-3">
+            <span className="inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-bold text-navy shadow-xs border border-white/60">
+              <Sparkles size={11} className="text-gold" /> Campus Facility
+            </span>
+          </div>
+        </div>
+
+        <div className="p-5">
+          <h3 className="text-base font-bold text-navy group-hover:text-gold transition">
+            {facility.title}
+          </h3>
+          <p className="mt-2 text-xs leading-5 text-slate-600">
+            {facility.description}
+          </p>
+        </div>
       </div>
-      <div className="p-6">
-        <h3 className="font-serif text-xl font-bold text-navy">{facility.title}</h3>
-        <p className="mt-3 text-sm leading-6 text-gray-600">{facility.description}</p>
+
+      <div className="p-5 pt-0">
+        <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-semibold text-slate-400">
+          <span>Kaseni Model Campus</span>
+          <span className="text-emerald-600">Active</span>
+        </div>
       </div>
     </article>
   );
 }
-
-export default FacilityCard;

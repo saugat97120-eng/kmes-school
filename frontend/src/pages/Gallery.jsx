@@ -2,18 +2,18 @@ import { useEffect, useState } from "react";
 import PageHeader from "../components/common/PageHeader";
 import Container from "../components/common/Container";
 import GalleryCard from "../components/cards/GalleryCard";
+import GalleryLightbox from "../components/common/GalleryLightbox";
 import CardSkeleton from "../components/common/CardSkeleton";
-import { X } from "lucide-react";
 import { fetchGallery, handleFetchError } from "../utils/apiHelpers";
 
 const categories = ["All", "Campus", "Events", "Sports", "Achievements"];
 
-function Gallery() {
+export default function Gallery() {
   const [gallery, setGallery] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [active, setActive] = useState("All");
-  const [selected, setSelected] = useState(null);
+  const [selectedIdx, setSelectedIdx] = useState(null);
 
   useEffect(() => {
     async function loadGallery() {
@@ -37,24 +37,31 @@ function Gallery() {
 
   return (
     <div>
-      <PageHeader eyebrow="Gallery" title="School Gallery" />
-      <section className="py-20">
+      <PageHeader
+        eyebrow="Campus Life Deck"
+        title="School Photo & Media Gallery"
+      />
+      <section className="py-16 sm:py-20">
         <Container>
           {error && (
-            <div className="mb-6 rounded-lg bg-red-50 p-4 text-red-700">
+            <div className="mb-6 rounded-2xl bg-red-50 p-4 text-xs font-semibold text-red-700 border border-red-200">
               Failed to load gallery: {error}
             </div>
           )}
 
+          {/* Category Tabs */}
           <div className="flex flex-wrap gap-2">
             {categories.map((c) => (
               <button
                 key={c}
-                onClick={() => setActive(c)}
-                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                onClick={() => {
+                  setActive(c);
+                  setSelectedIdx(null);
+                }}
+                className={`rounded-xl px-4 py-2 text-xs font-bold transition-all ${
                   active === c
-                    ? "bg-navy text-white"
-                    : "bg-gray-100 text-navy hover:bg-gray-200"
+                    ? "bg-navy text-white shadow-xs"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                 }`}
               >
                 {c}
@@ -63,41 +70,41 @@ function Gallery() {
           </div>
 
           {loading ? (
-            <div className="mt-10">
+            <div className="mt-8">
               <CardSkeleton count={8} />
             </div>
           ) : (
-            <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-              {filtered.map((img) => (
-                <GalleryCard key={img._id || img.id} image={img} onClick={() => setSelected(img)} />
+            <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              {filtered.map((img, idx) => (
+                <GalleryCard
+                  key={img._id || img.id || idx}
+                  image={img}
+                  onClick={() => setSelectedIdx(idx)}
+                />
               ))}
             </div>
           )}
         </Container>
       </section>
 
-      {selected && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-6"
-          onClick={() => setSelected(null)}
-        >
-          <button
-            className="absolute right-6 top-6 text-white"
-            onClick={() => setSelected(null)}
-            aria-label="Close"
-          >
-            <X size={28} />
-          </button>
-          <img
-            src={selected.src}
-            alt={selected.title}
-            className="max-h-[85vh] max-w-full rounded-lg object-contain"
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
+      {/* Lightbox Modal */}
+      {selectedIdx !== null && (
+        <GalleryLightbox
+          images={filtered}
+          currentIndex={selectedIdx}
+          onClose={() => setSelectedIdx(null)}
+          onPrev={() =>
+            setSelectedIdx((prev) =>
+              prev === 0 ? filtered.length - 1 : prev - 1
+            )
+          }
+          onNext={() =>
+            setSelectedIdx((prev) =>
+              prev === filtered.length - 1 ? 0 : prev + 1
+            )
+          }
+        />
       )}
     </div>
   );
 }
-
-export default Gallery;

@@ -1,4 +1,5 @@
 import HeroSection from "../components/home/HeroSection";
+import ClassDeckHub from "../components/home/ClassDeckHub";
 import QuickFacts from "../components/home/QuickFacts";
 import AboutSection from "../components/home/AboutSection";
 import LeadershipSection from "../components/home/LeadershipSection";
@@ -13,21 +14,25 @@ import GallerySection from "../components/home/GallerySection";
 import AchievementsSection from "../components/home/AchievementsSection";
 import AdmissionSection from "../components/home/AdmissionSection";
 import ContactSection from "../components/home/ContactSection";
+import { useIStudent } from "../context/useIStudent";
 
-function Home() {
+export default function Home() {
+  const { openPortal } = useIStudent();
+
   return (
-    <main>
+    <main className="min-h-screen bg-slate-50/30">
       <HeroSection />
+      <ClassDeckHub onOpenPortal={openPortal} />
       <QuickFacts />
+      <NoticeBoard />
+      <AcademicSection />
       <AboutSection />
       <LeadershipSection />
-      <AcademicSection />
+      <EventsSection />
       <MissionVisionSection />
       <ValuesSection />
       <FacilitiesSection />
       <ActivitiesSection />
-      <NoticeBoard />
-      <EventsSection />
       <GallerySection />
       <AchievementsSection />
       <AdmissionSection />
@@ -35,5 +40,3 @@ function Home() {
     </main>
   );
 }
-
-export default Home;
