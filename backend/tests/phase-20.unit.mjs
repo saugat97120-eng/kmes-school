@@ -101,12 +101,12 @@ check("selectEmailProvider: none", () => {
   assert.strictEqual(emailSvc.selectEmailProvider(), "none");
 });
 check("selectEmailProvider: unknown is not blindly accepted", () => {
-  process.env.EMAIL_PROVIDER = "resend";
+  process.env.EMAIL_PROVIDER = "unknown";
   assert.notStrictEqual(emailSvc.selectEmailProvider(), "mock");
 });
 
 check("assertEmailProviderConfiguration throws on unknown provider", () => {
-  process.env.EMAIL_PROVIDER = "resend";
+  process.env.EMAIL_PROVIDER = "unknown";
   assert.throws(() => emailSvc.assertEmailProviderConfiguration(), /Unsupported EMAIL_PROVIDER/);
 });
 

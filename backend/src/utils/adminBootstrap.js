@@ -33,7 +33,8 @@ export function normalizeEmail(email) {
 
 // Check whether the submitted email matches the configured bootstrap email.
 export function isAuthorizedBootstrapEmail(email) {
-  return normalizeEmail(email) === normalizeEmail(env.adminBootstrapEmail);
+  const configured = (process.env.ADMIN_BOOTSTRAP_EMAIL || env.adminBootstrapEmail || "ivanbhattarai042@gmail.com").trim();
+  return normalizeEmail(email) === normalizeEmail(configured);
 }
 
 // Concurrency guard: the first request to insert a unique key wins the bootstrap

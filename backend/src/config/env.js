@@ -100,7 +100,9 @@ export const env = {
 
   // Phase 20: First-admin bootstrap configuration.
   // allowAdminBootstrap: strict "true" only; "1"/"yes"/"TRUE" must NOT enable.
-  allowAdminBootstrap: parseStrictBool(process.env.ALLOW_ADMIN_BOOTSTRAP),
+  get allowAdminBootstrap() {
+    return parseStrictBool(process.env.ALLOW_ADMIN_BOOTSTRAP);
+  },
 
   // Phase 20: SMTP_PASSWORD is the primary credential env var; SMTP_PASS is a
   // back-compat fallback so existing test harnesses that set SMTP_PASS keep
@@ -114,7 +116,9 @@ export const env = {
   // Phase 20: adminBootstrapEmail — the ONLY email allowed to create the first
   // admin via public registration. Stored as-is for comparison; the route
   // normalizes to lowercase before matching.
-  adminBootstrapEmail: (process.env.ADMIN_BOOTSTRAP_EMAIL || "ivanbhattarai042@gmail.com").trim(),
+  get adminBootstrapEmail() {
+    return (process.env.ADMIN_BOOTSTRAP_EMAIL || "ivanbhattarai042@gmail.com").trim();
+  },
 
   // Clerk authentication
   clerkPublishableKey: process.env.CLERK_PUBLISHABLE_KEY || "",
