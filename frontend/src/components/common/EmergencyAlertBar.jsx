@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { BellRing, X, ArrowRight } from "lucide-react";
 import { useSiteSettings } from "../../context/useSiteSettings";
 
-function EmergencyAlertBar() {
+export default function EmergencyAlertBar() {
   const { settings } = useSiteSettings();
   const [dismissed, setDismissed] = useState(() => {
     if (typeof window === "undefined") return true;
@@ -21,18 +21,18 @@ function EmergencyAlertBar() {
   const sessionText = settings.academicSession ? `Session ${settings.academicSession}` : "New Session";
 
   return (
-    <div className="relative bg-gradient-to-r from-navy to-navy-2 px-4 py-2 text-white shadow-sm print:hidden">
+    <div className="relative bg-gradient-to-r from-navy via-navy-2 to-navy px-4 py-2 text-white shadow-sm print:hidden border-b border-white/10">
       <div className="mx-auto flex max-w-7xl items-center justify-between text-xs sm:text-sm">
-        <div className="flex flex-1 items-center justify-center gap-2 pr-6 sm:justify-start">
-          <span className="flex items-center gap-1 rounded-full bg-gold/20 px-2.5 py-0.5 font-semibold text-gold">
-            <BellRing size={13} className="animate-pulse" /> Announcement
+        <div className="flex flex-1 items-center justify-center gap-2.5 pr-6 sm:justify-start">
+          <span className="flex items-center gap-1.5 rounded-full bg-gold/25 px-2.5 py-0.5 font-bold text-gold border border-gold/40">
+            <BellRing size={13} className="animate-pulse text-gold" /> Announcement
           </span>
-          <span className="font-medium truncate max-w-[240px] sm:max-w-none">
+          <span className="font-semibold text-white truncate max-w-[240px] sm:max-w-none">
             {statusText} ({sessionText}) — Enrolling now!
           </span>
           <Link
             to="/admissions"
-            className="hidden items-center gap-1 font-semibold text-gold underline-offset-4 hover:underline sm:inline-flex"
+            className="hidden items-center gap-1 font-bold text-gold underline-offset-4 hover:underline sm:inline-flex"
           >
             Apply Online <ArrowRight size={13} />
           </Link>
@@ -41,7 +41,7 @@ function EmergencyAlertBar() {
         <button
           type="button"
           onClick={handleDismiss}
-          className="rounded p-1 text-gray-300 transition hover:bg-white/10 hover:text-white"
+          className="rounded p-1 text-slate-200 transition hover:bg-white/15 hover:text-white cursor-pointer"
           aria-label="Dismiss announcement"
         >
           <X size={15} />
@@ -50,5 +50,3 @@ function EmergencyAlertBar() {
     </div>
   );
 }
-
-export default EmergencyAlertBar;

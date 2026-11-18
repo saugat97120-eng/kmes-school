@@ -12,24 +12,24 @@ export default function TopBar() {
   const rawPhone = phone.split(/[,/]/)[0].trim().replace(/[^0-9+]/g, "");
 
   return (
-    <div className="hidden bg-navy-2 py-2 text-xs text-slate-300 sm:block border-b border-white/5">
+    <div className="hidden bg-navy-2 py-2 text-xs text-white sm:block border-b border-white/10">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-5">
           <a
             href={`tel:${rawPhone}`}
-            className="flex items-center gap-1.5 hover:text-white transition"
+            className="flex items-center gap-1.5 font-medium text-slate-100 hover:text-white transition"
           >
             <Phone size={13} className="text-gold" /> {phone}
           </a>
 
           <a
             href={`mailto:${email}`}
-            className="flex items-center gap-1.5 hover:text-white transition"
+            className="flex items-center gap-1.5 font-medium text-slate-100 hover:text-white transition"
           >
             <Mail size={13} className="text-gold" /> {email}
           </a>
 
-          <span className="flex items-center gap-1.5 text-slate-400">
+          <span className="flex items-center gap-1.5 font-medium text-slate-200">
             <Calendar size={13} className="text-gold" /> {established} • सत्र: {session}
           </span>
         </div>
@@ -37,7 +37,7 @@ export default function TopBar() {
         <div className="flex items-center gap-4">
           <a
             href={settings.facebookUrl || "https://www.facebook.com/61554117025008"}
-            className="flex items-center gap-1.5 text-gold hover:text-white transition font-medium"
+            className="flex items-center gap-1.5 text-gold hover:text-white transition font-semibold"
             target="_blank"
             rel="noreferrer"
           >

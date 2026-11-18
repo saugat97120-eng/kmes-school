@@ -23,16 +23,16 @@ export default function AboutSection() {
               Dedicated to Academic Discipline & Holistic Growth
             </h2>
 
-            <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base">
+            <p className="mt-4 text-sm leading-7 text-slate-800 sm:text-base">
               Established in <strong className="text-navy">{establishedYear}</strong> in the peaceful community of Belbari-05, Kaseni, Morang, <strong className="text-navy">{schoolName}</strong> has stood for over two decades as a beacon of progressive, values-based English-medium education.
             </p>
 
-            <p className="mt-3 text-sm leading-7 text-slate-600">
+            <p className="mt-3 text-sm leading-7 text-slate-800">
               Under the stewardship of Principal Ivan Bhattarai and dedicated faculty, our pedagogy bridges foundational literacy and numeracy with modern science practicals, interactive computer literacy, and dynamic co-curricular activities.
             </p>
 
             {/* Feature Bullets */}
-            <div className="mt-6 space-y-2.5 text-xs font-semibold text-slate-700">
+            <div className="mt-6 space-y-2.5 text-xs font-semibold text-slate-800">
               <div className="flex items-center gap-2">
                 <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />
                 <span>Nursery through Grade 10 National SEE Board Curriculum</span>
