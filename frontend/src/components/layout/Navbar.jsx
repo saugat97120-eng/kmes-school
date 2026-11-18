@@ -131,8 +131,8 @@ export default function Navbar() {
           )}
         </nav>
 
-        {/* Right Action Buttons */}
-        <div className="hidden items-center gap-2.5 sm:flex">
+        {/* Right Action Buttons: Desktop only */}
+        <div className="hidden items-center gap-2.5 lg:flex">
           {/* iStudent Portal Trigger Pill */}
           <button
             type="button"
@@ -157,19 +157,19 @@ export default function Navbar() {
           </Link>
         </div>
 
-        {/* Mobile Hamburger & Quick iStudent Trigger */}
+        {/* Mobile / Tablet: Hamburger and single quick action */}
         <div className="flex items-center gap-2 lg:hidden">
           <button
             type="button"
             onClick={openPortal}
-            className="inline-flex items-center gap-1 rounded-xl bg-navy px-2.5 py-1.5 text-xs font-bold text-white"
+            className="inline-flex items-center gap-1 rounded-xl bg-navy px-2.5 py-1.5 text-xs font-bold text-white shadow-xs"
           >
             <GraduationCap size={14} className="text-gold" />
             <span>iStudent</span>
           </button>
 
           <button
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-navy hover:bg-slate-50 transition"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-navy hover:bg-slate-50 transition"
             onClick={() => setMobileOpen(true)}
             aria-label="Open mobile navigation"
           >

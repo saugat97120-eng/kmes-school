@@ -1,11 +1,9 @@
-import { Phone, Mail, Share2, Calendar, GraduationCap } from "lucide-react";
+import { Phone, Mail, Share2, Calendar } from "lucide-react";
 import { useSiteSettings } from "../../context/useSiteSettings";
-import { useIStudent } from "../../context/useIStudent";
 import { isPlaceholder } from "../../utils/format";
 
 export default function TopBar() {
   const { settings } = useSiteSettings();
-  const { openPortal } = useIStudent();
 
   const phone = !isPlaceholder(settings.phone) ? settings.phone : "+977 9842089044";
   const email = !isPlaceholder(settings.email) ? settings.email : "ivanbhattarai042@gmail.com";
@@ -37,18 +35,9 @@ export default function TopBar() {
         </div>
 
         <div className="flex items-center gap-4">
-          <button
-            onClick={openPortal}
-            className="flex items-center gap-1 text-gold hover:text-white transition font-medium"
-          >
-            <GraduationCap size={13} /> iStudent Portal Quick Launch
-          </button>
-
-          <span className="text-slate-600">|</span>
-
           <a
             href={settings.facebookUrl || "https://www.facebook.com/61554117025008"}
-            className="flex items-center gap-1.5 hover:text-gold transition"
+            className="flex items-center gap-1.5 text-gold hover:text-white transition font-medium"
             target="_blank"
             rel="noreferrer"
           >
