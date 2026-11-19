@@ -44,7 +44,7 @@ export default function GalleryLightbox({
           </span>
           <span className="text-white/40">•</span>
           <span className="font-semibold text-gold uppercase tracking-wider text-[11px]">
-            {activeImage.category || "Campus Moment"}
+            {activeImage.category || "School Moment"}
           </span>
         </div>
 

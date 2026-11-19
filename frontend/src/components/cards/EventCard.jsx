@@ -46,7 +46,7 @@ export default function EventCard({ event }) {
         <div className="p-5">
           <div className="flex items-center gap-1.5 text-xs text-slate-700 font-bold">
             <MapPin size={13} className="text-gold" />
-            <span>{event.location || "KMES Main Campus, Kaseni"}</span>
+            <span>{event.location || "KMES Main School, Kaseni"}</span>
           </div>
 
           <h3 className="mt-2.5 text-base font-bold text-navy group-hover:text-amber-800 transition line-clamp-2">

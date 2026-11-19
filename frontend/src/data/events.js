@@ -13,7 +13,7 @@ const events = [
     title: "Science Exhibition",
     date: "Coming Soon",
     time: "",
-    location: "School Campus",
+    location: "School Grounds",
     image: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800&q=80",
     description: "Students will showcase science projects. Full schedule to be announced.",
   },

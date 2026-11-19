@@ -15,7 +15,7 @@ export default function FacilitiesSection() {
     <section className="bg-slate-50/60 py-20 border-t border-slate-100">
       <Container>
         <SectionHeading
-          eyebrow="Campus Infrastructure Deck"
+          eyebrow="School Infrastructure Deck"
           title="Modern Learning Facilities"
           description="Designed to support interactive scientific experimentations, multimedia computer skills, and healthy physical recreation."
           centered
@@ -27,7 +27,7 @@ export default function FacilitiesSection() {
         </div>
         <div className="mt-10 text-center">
           <Button to="/facilities" variant="outline" showArrow>
-            Explore All Campus Facilities
+            Explore All School Facilities
           </Button>
         </div>
       </Container>

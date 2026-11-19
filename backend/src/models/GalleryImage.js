@@ -7,8 +7,8 @@ const galleryImageSchema = new mongoose.Schema(
     src: { type: String, required: true },
     category: {
       type: String,
-      enum: ["Campus", "Events", "Sports", "Achievements"],
-      default: "Campus",
+      enum: ["School", "Campus", "Events", "Sports", "Achievements"],
+      default: "School",
     },
     published: { type: Boolean, default: true },
     deletedAt: { type: Date, default: null },

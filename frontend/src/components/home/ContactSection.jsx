@@ -30,7 +30,7 @@ export default function ContactSection() {
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 border border-blue-100">
                 <MapPin size={22} />
               </div>
-              <h3 className="mt-4 text-sm font-bold text-navy">Campus Location</h3>
+              <h3 className="mt-4 text-sm font-bold text-navy">School Location</h3>
               <p className="mt-1 text-xs text-slate-600 leading-5">{address}</p>
             </div>
             <div className="mt-4 pt-3 border-t border-slate-100 text-[11px] font-semibold text-slate-400">

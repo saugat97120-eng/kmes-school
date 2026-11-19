@@ -16,7 +16,7 @@ export default function FacilityCard({ facility }) {
           />
           <div className="absolute top-3 left-3">
             <span className="inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-bold text-navy shadow-xs border border-white/60">
-              <Sparkles size={11} className="text-gold" /> Campus Facility
+              <Sparkles size={11} className="text-gold" /> School Facility
             </span>
           </div>
         </div>
@@ -33,7 +33,7 @@ export default function FacilityCard({ facility }) {
 
       <div className="p-5 pt-0">
         <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-semibold text-slate-400">
-          <span>Kaseni Model Campus</span>
+          <span>Kaseni Model School</span>
           <span className="text-emerald-600">Active</span>
         </div>
       </div>

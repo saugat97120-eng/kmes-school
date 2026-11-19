@@ -54,9 +54,9 @@ async function seed() {
   });
 
   await GalleryImage.create({
-    title: "Campus View",
+    title: "School View",
     src: "https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&q=80",
-    category: "Campus",
+    category: "School",
   });
 
   await Achievement.create({

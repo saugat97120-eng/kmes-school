@@ -21,7 +21,7 @@ const navLinks = [
     children: [
       { label: "School Profile & History", to: "/about", description: "Est. 2059 B.S. in Belbari-05, Kaseni" },
       { label: "Leadership Messages", to: "/about#leadership", description: "Principal & School Committee" },
-      { label: "Campus & Labs", to: "/facilities", description: "Science lab, computer room & library" },
+      { label: "School Facilities & Labs", to: "/facilities", description: "Science lab, computer room & library" },
     ],
   },
   {
@@ -36,10 +36,10 @@ const navLinks = [
   { label: "Notices", to: "/notices" },
   { label: "Events", to: "/events" },
   {
-    label: "Campus Life",
+    label: "School Life",
     to: "/gallery",
     children: [
-      { label: "Photo & Media Deck", to: "/gallery", description: "Classroom & campus moments" },
+      { label: "Photo & Media Deck", to: "/gallery", description: "Classroom & school moments" },
       { label: "Hall of Fame & Awards", to: "/achievements", description: "SEE toppers & sports accolades" },
     ],
   },

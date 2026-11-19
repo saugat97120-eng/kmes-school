@@ -67,7 +67,7 @@ export default function Footer() {
             <div className="mt-4 flex flex-col gap-2.5 text-xs">
               <Link to="/facilities" className="text-slate-200 hover:text-gold transition font-medium">Science & Computer Labs</Link>
               <Link to="/activities" className="text-slate-200 hover:text-gold transition font-medium">ECA/CCA & Sports Clubs</Link>
-              <Link to="/gallery" className="text-slate-200 hover:text-gold transition font-medium">Campus Photo Deck</Link>
+              <Link to="/gallery" className="text-slate-200 hover:text-gold transition font-medium">School Photo Deck</Link>
               <Link to="/achievements" className="text-slate-200 hover:text-gold transition font-medium">SEE Board Hall of Fame</Link>
               <Link to="/admin/login" className="hover:text-gold transition flex items-center gap-1.5 text-slate-300 font-medium">
                 <ShieldCheck size={13} /> Staff Portal Login

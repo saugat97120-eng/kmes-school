@@ -21,7 +21,7 @@ export default function GallerySection() {
     <section className="bg-slate-50/60 py-20 border-t border-slate-100">
       <Container>
         <SectionHeading
-          eyebrow="Campus Media Deck"
+          eyebrow="School Media Deck"
           title="Moments From KMES Life"
           description="A glimpse into academic activities, sports competitions, science exhibitions, and annual celebrations."
           centered

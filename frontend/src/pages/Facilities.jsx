@@ -29,7 +29,7 @@ function Facilities() {
 
   return (
     <div>
-      <PageHeader eyebrow="Facilities" title="Campus & Facilities" />
+      <PageHeader eyebrow="Facilities" title="School Facilities & Infrastructure" />
       <section className="py-20">
         <Container>
           {error && (

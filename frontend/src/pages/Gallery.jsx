@@ -6,7 +6,7 @@ import GalleryLightbox from "../components/common/GalleryLightbox";
 import CardSkeleton from "../components/common/CardSkeleton";
 import { fetchGallery, handleFetchError } from "../utils/apiHelpers";
 
-const categories = ["All", "Campus", "Events", "Sports", "Achievements"];
+const categories = ["All", "School Life", "Events", "Sports", "Achievements"];
 
 export default function Gallery() {
   const [gallery, setGallery] = useState([]);
@@ -33,12 +33,19 @@ export default function Gallery() {
   }, []);
 
   const filtered =
-    active === "All" ? gallery : gallery.filter((g) => g.category === active);
+    active === "All"
+      ? gallery
+      : gallery.filter((g) => {
+          if (active === "School Life") {
+            return g.category === "School Life" || g.category === "School" || g.category === "Campus";
+          }
+          return g.category === active;
+        });
 
   return (
     <div>
       <PageHeader
-        eyebrow="Campus Life Deck"
+        eyebrow="School Life Deck"
         title="School Photo & Media Gallery"
       />
       <section className="py-16 sm:py-20">

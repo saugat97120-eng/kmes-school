@@ -82,7 +82,7 @@ export default function ClassDeckHub({ onOpenPortal }) {
     },
     {
       id: "achievements",
-      category: "campus",
+      category: "school",
       title: "Hall of Fame & Results",
       tag: "100% Success",
       tagColor: "bg-yellow-100 text-yellow-900 border-yellow-300",
@@ -94,9 +94,9 @@ export default function ClassDeckHub({ onOpenPortal }) {
     },
     {
       id: "facilities",
-      category: "campus",
+      category: "school",
       title: "Science & Computer Labs",
-      tag: "Smart Campus",
+      tag: "Smart School",
       tagColor: "bg-purple-100 text-purple-900 border-purple-300",
       description: "Dedicated science laboratory, computer facility, library, and expansive playground.",
       to: "/facilities",
@@ -106,8 +106,8 @@ export default function ClassDeckHub({ onOpenPortal }) {
     },
     {
       id: "gallery",
-      category: "campus",
-      title: "Campus Life Photo Deck",
+      category: "school",
+      title: "School Life Photo Deck",
       tag: "Media Gallery",
       tagColor: "bg-rose-100 text-rose-900 border-rose-300",
       description: "High-resolution photo deck capturing classroom projects, assemblies, and annual celebrations.",
@@ -194,14 +194,14 @@ export default function ClassDeckHub({ onOpenPortal }) {
                 Circulars
               </button>
               <button
-                onClick={() => setActiveFilter("campus")}
+                onClick={() => setActiveFilter("school")}
                 className={`rounded-xl px-3.5 py-1.5 font-bold transition ${
-                  activeFilter === "campus"
+                  activeFilter === "school"
                     ? "bg-white text-navy shadow-xs border border-slate-200"
                     : "text-slate-700 hover:text-navy"
                 }`}
               >
-                Campus Life
+                School Life
               </button>
             </div>
           </div>

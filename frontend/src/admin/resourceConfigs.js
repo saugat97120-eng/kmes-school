@@ -42,7 +42,7 @@ export const resourceConfigs = {
         name: "category",
         label: "Category",
         type: "select",
-        options: ["Campus", "Events", "Sports", "Achievements"],
+        options: ["School", "Campus", "Events", "Sports", "Achievements"],
       },
     ],
   },

@@ -43,7 +43,7 @@ export default function AboutSection() {
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />
-                <span>Safe student transport and monitored campus environment</span>
+                <span>Safe student transport and monitored school environment</span>
               </div>
             </div>
 
@@ -57,12 +57,12 @@ export default function AboutSection() {
             </div>
           </div>
 
-          {/* Right Column: Campus Showcase Card */}
+          {/* Right Column: School Showcase Card */}
           <div className="relative">
             <div className="relative aspect-[4/3] overflow-hidden rounded-3xl border border-slate-200 shadow-xl bg-slate-100">
               <img
                 src="https://images.unsplash.com/photo-1509062522246-3755977927d7?w=900&q=80"
-                alt="Kaseni Model School Campus Life"
+                alt="Kaseni Model School Life"
                 className="h-full w-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-navy/60 via-transparent to-transparent" />

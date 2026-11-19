@@ -2,14 +2,14 @@ const gallery = [
   {
     id: "demo-1",
     src: "https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&q=80",
-    title: "Campus View",
-    category: "Campus",
+    title: "School View",
+    category: "School",
   },
   {
     id: "demo-2",
     src: "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&q=80",
     title: "Classroom Activity",
-    category: "Campus",
+    category: "School",
   },
   {
     id: "demo-3",

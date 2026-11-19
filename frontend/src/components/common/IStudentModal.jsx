@@ -54,7 +54,7 @@ const studentPortals = [
     iconBg: "bg-indigo-100 text-indigo-800",
   },
   {
-    title: "Campus Facilities",
+    title: "School Facilities",
     badge: "Modern Labs",
     badgeColor: "bg-purple-100 text-purple-900 border-purple-300",
     description: "Science lab, computer facility, library, playground, and student transport.",
@@ -72,7 +72,7 @@ const studentPortals = [
     iconBg: "bg-yellow-100 text-yellow-800",
   },
   {
-    title: "Campus Life & Gallery",
+    title: "School Life & Gallery",
     badge: "Photo Deck",
     badgeColor: "bg-rose-100 text-rose-900 border-rose-300",
     description: "Explore snapshots of daily classroom engagement and annual school milestones.",

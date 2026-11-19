@@ -24,7 +24,7 @@ export default function EventsSection() {
       <Container>
         <SectionHeading
           eyebrow="Academic Calendar Deck"
-          title={upcoming.length ? "Upcoming School Events" : "Recent Campus Events"}
+          title={upcoming.length ? "Upcoming School Events" : "Recent School Events"}
           description="Track upcoming sports meets, cultural celebrations, parent-teacher conferences, and academic milestones."
           centered
         />
