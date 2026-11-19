@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import { SiteSettingsProvider } from "./context/SiteSettingsContext";
@@ -6,6 +7,7 @@ import ScrollToTop from "./components/common/ScrollToTop";
 import TopBar from "./components/layout/TopBar";
 import Navbar from "./components/layout/Navbar";
 import Footer from "./components/layout/Footer";
+import Loading from "./components/common/Loading";
 
 import Home from "./pages/Home";
 import About from "./pages/About";
@@ -22,23 +24,24 @@ import Admissions from "./pages/Admissions";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 
-import AdminLogin from "./admin/AdminLogin";
-import ResetPassword from "./admin/ResetPassword";
-import AdminLayout from "./admin/AdminLayout";
+const AdminLogin = lazy(() => import("./admin/AdminLogin"));
+const ResetPassword = lazy(() => import("./admin/ResetPassword"));
+const AdminLayout = lazy(() => import("./admin/AdminLayout"));
+const AdminDashboard = lazy(() => import("./admin/AdminDashboard"));
+const AdminMessages = lazy(() => import("./admin/AdminMessages"));
+const SiteSettingsManager = lazy(() => import("./admin/SiteSettingsManager"));
+const LeadershipManager = lazy(() => import("./admin/LeadershipManager"));
+const PageContentManager = lazy(() => import("./admin/PageContentManager"));
+const ResourceManager = lazy(() => import("./admin/ResourceManager"));
+const ReviewQueue = lazy(() => import("./admin/ReviewQueue"));
+const Inbox = lazy(() => import("./admin/Inbox"));
+const MediaLibrary = lazy(() => import("./admin/MediaLibrary"));
+const Trash = lazy(() => import("./admin/Trash"));
+const UsersManager = lazy(() => import("./admin/UsersManager"));
+const ActivityLogs = lazy(() => import("./admin/ActivityLogs"));
+const FacebookIntegration = lazy(() => import("./admin/FacebookIntegration"));
+
 import ProtectedRoute from "./admin/ProtectedRoute";
-import AdminDashboard from "./admin/AdminDashboard";
-import AdminMessages from "./admin/AdminMessages";
-import SiteSettingsManager from "./admin/SiteSettingsManager";
-import LeadershipManager from "./admin/LeadershipManager";
-import PageContentManager from "./admin/PageContentManager";
-import ResourceManager from "./admin/ResourceManager";
-import ReviewQueue from "./admin/ReviewQueue";
-import Inbox from "./admin/Inbox";
-import MediaLibrary from "./admin/MediaLibrary";
-import Trash from "./admin/Trash";
-import UsersManager from "./admin/UsersManager";
-import ActivityLogs from "./admin/ActivityLogs";
-import FacebookIntegration from "./admin/FacebookIntegration";
 import PermissionRoute from "./admin/PermissionRoute";
 import { PERMISSIONS } from "./admin/permissions";
 import { resourceConfigs } from "./admin/resourceConfigs";
@@ -65,7 +68,8 @@ function App() {
       <BrowserRouter>
         <IStudentProvider>
           <ScrollToTop />
-          <Routes>
+          <Suspense fallback={<Loading />}>
+            <Routes>
           {/* Admin routes: separate layout, no public navbar/footer */}
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/reset-password" element={<ResetPassword />} />
@@ -202,6 +206,7 @@ function App() {
             </PublicLayout>
           } />
         </Routes>
+          </Suspense>
         </IStudentProvider>
       </BrowserRouter>
     </SiteSettingsProvider>

@@ -164,8 +164,8 @@ export function validateProductionConfiguration() {
       if (missing.length) {
         problems.push(`EMAIL_PROVIDER is 'smtp' but ${missing.join(", ")} is not set. Password-reset email delivery will fail.`);
       }
-    } else if (env.emailProvider && env.emailProvider !== "mock" && env.emailProvider !== "none") {
-      problems.push(`Unsupported EMAIL_PROVIDER value. Supported: mock, smtp, none.`);
+    } else if (env.emailProvider && env.emailProvider !== "mock" && env.emailProvider !== "none" && env.emailProvider !== "resend") {
+      problems.push("Unsupported EMAIL_PROVIDER value. Supported: mock, smtp, resend, none.");
     }
   }
   return problems;

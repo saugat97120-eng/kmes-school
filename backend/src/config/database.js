@@ -4,6 +4,10 @@ export async function connectDB() {
   const uri = process.env.MONGODB_URI;
 
   if (!uri) {
+    if (process.env.NODE_ENV === "production") {
+      console.error("FATAL: MONGODB_URI is required in production environment.");
+      process.exit(1);
+    }
     console.warn(
       "MONGODB_URI is not set. API will run, but database routes will fail and /api/health will report the database as unavailable until it's configured."
     );
